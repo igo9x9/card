@@ -16,6 +16,7 @@ const ASSETS = {
         "card-bear": "img/card-bear.png",
         "card-gake": "img/card-gake.png",
         "card-snake": "img/card-snake.png",
+        "card-hane": "img/card-hane.png",
         "attack": "img/attack.png",
         "defense": "img/defense.png",
         "life": "img/life.png",
@@ -489,8 +490,12 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                     continue;
                 }
 
-                self.enemyActions[i] = CircleShape({radius:50, fill:color, strokeWidth:5, stroke: "black"})
-                    .addChildTo(self)
+                if (actions[i].name === "life") {
+                    self.enemyActions[i] = HeartShape({radius:50, fill:color, strokeWidth:5, stroke: "black"});
+                } else {
+                    self.enemyActions[i] = CircleShape({radius:50, fill:color, strokeWidth:5, stroke: "black"});
+                }
+                self.enemyActions[i].addChildTo(self)
                     .setPosition(self.enemyStatusBox.x - 150 + i * 52, self.enemyStatusBox.y + 40).setScale(0.5);
                 Label({text:actions[i].point, fontSize:70, fontWeight:800, fill:"white", stroke:"black", strokeWidth:5}).addChildTo(self.enemyActions[i]);
             }
@@ -575,7 +580,8 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵の攻撃
         function attackToPlayer(enemyAction, damage) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"firebrick", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                const ball = CircleShape({radius: 150, fill: "firebrick", stroke:"black", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                Label({text:damage, fontSize:200, fill:"white", fontWeight:800, stroke: "black", strokeWidth: 20}).addChildTo(ball);
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
@@ -638,7 +644,8 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵のシールドアップ
         function enemyShieldUp(enemyAction, point) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"blue", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                const ball = CircleShape({radius: 150, fill: "blue", stroke:"black", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                Label({text:point, fontSize:200, fill:"white", fontWeight:800, stroke: "black", strokeWidth: 20}).addChildTo(ball);
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
@@ -668,7 +675,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵の回復
         function enemyLifeUp(enemyAction, point) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"deeppink", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                const ball = HeartShape({radius: 150, fill: "deeppink", stroke:"black", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                Label({text:point, fontSize:200, fill:"white", fontWeight:800, stroke: "black", strokeWidth: 20}).addChildTo(ball);
+
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
@@ -698,7 +707,8 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵に攻撃
         function attackToEnemy(targetCard) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"firebrick", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                const ball = CircleShape({radius: 150, fill: "firebrick", stroke:"black", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                Label({text:targetCard.attack, fontSize:200, fill:"white", fontWeight:800, stroke: "black", strokeWidth: 20}).addChildTo(ball);
                 ball.setPosition(self.handsLayer.x + targetCard.ui.x + targetCard.ui.attackBox.x, self.handsLayer.y + targetCard.ui.y + targetCard.ui.attackBox.y)
                 .tweener
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
@@ -761,7 +771,8 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 自分のシールドアップ
         function myShieldUp(targetCard) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"blue", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                const ball = CircleShape({radius: 150, fill: "blue", stroke:"black", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
+                Label({text:targetCard.defense, fontSize:200, fill:"white", fontWeight:800, stroke: "black", strokeWidth: 20}).addChildTo(ball);
                 ball.setPosition(self.handsLayer.x + targetCard.ui.x + targetCard.ui.defenseBox.x, self.handsLayer.y + targetCard.ui.y + targetCard.ui.defenseBox.y)
                 .tweener
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
@@ -1030,6 +1041,11 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                         for (let i = 0; i < 4; i++) {
                             cards[i].defenseUp(cards[i].defense);
                         }
+                    } else if (self.moveToLayoutCard.skill === "攻撃力防御力２倍") {
+                        for (let i = 0; i < 4; i++) {
+                            cards[i].attackUp(cards[i].attack);
+                            cards[i].defenseUp(cards[i].defense);
+                        }
                     }
 
                     self.moveToLayoutCard.ui.clear("pointstart");
@@ -1234,12 +1250,12 @@ function Card(cardID, isLarge) {
 
     let cardWidth = 130;
     let cardHeight = 195;
-    let cardTitleFontSize = 15;
+    let cardTitleFontSize = 20;
     let cardDescriptionFontSize = 8;
     // let imageWidth = 120;
     // let imageHeight = 70;
     let imageScale = 0.5;
-    let titleY = -75;
+    let titleY = -65;
     let imageY = -18;
     let descriptionY = 50;
 
@@ -1266,6 +1282,8 @@ function Card(cardID, isLarge) {
         stroke: "black",
         strokeWidth: 5,
         cornerRadius: 5,
+        shadow: "black",
+        shadowBlur: 15,
     });
 
     createFromCardID(self.id);
@@ -1286,6 +1304,8 @@ function Card(cardID, isLarge) {
         width: cardWidth - 20,
         height: cardTitleFontSize * 2,
         align: "center",
+        stroke: "white",
+        strokeWidth: 5,
     }).addChildTo(self.ui).setPosition(0, titleY);
 
     // 解説
@@ -1374,17 +1394,17 @@ function Card(cardID, isLarge) {
     // カードIDからカードを生成
     function createFromCardID(id) {
         if (id === "01") {
-            self.title = "気合を込める";
+            self.title = "気合の一手";
             self.img = "card-bear";
             self.description = "このターンに限り、すべてのカードの攻撃力が２倍。";
             self.attack = 0;
             self.defense = 0;
             self.skill = "攻撃力２倍";
         } else if (id === "02") {
-            self.title = "キリ";
-            self.img = "card-kiri";
+            self.title = "ハネ";
+            self.img = "card-hane";
             self.description = "";
-            self.attack = 99;
+            self.attack = 1;
             self.defense = 0;
             self.skill = null;
         } else if (id === "03") {
@@ -1402,12 +1422,12 @@ function Card(cardID, isLarge) {
             self.defense = 0;
             self.skill = null;
         } else if (id === "05") {
-            self.title = "無理筋を咎める";
+            self.title = "厚みの力";
             self.img = "card-kiri";
-            self.description = "このターンに限り、すべてのカードの防御力が２倍。";
+            self.description = "このターンに限り、すべてのカードの攻撃力と防御力が２倍。";
             self.attack = 0;
             self.defense = 0;
-            self.skill = "防御力２倍";
+            self.skill = "攻撃力防御力２倍";
         } else if (id === "06") {
             self.title = "ツギ";
             self.img = "card-gake";
@@ -1416,11 +1436,11 @@ function Card(cardID, isLarge) {
             self.defense = 1;
             self.skill = null;
         } else if (id === "07") {
-            self.title = "ノビ";
+            self.title = "アキ三角";
             self.img = "card-snake";
-            self.description = "XXXXXXXXXXXXXXX";
-            self.attack = 1;
-            self.defense = 1;
+            self.description = "攻撃力も防御力もない。";
+            self.attack = 0;
+            self.defense = 0;
             self.skill = null;
         }
     }
