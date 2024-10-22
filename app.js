@@ -1,4 +1,3 @@
-
 phina.globalize();
 
 const version = "1.0";
@@ -432,9 +431,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         }).addChildTo(this).setPosition(this.gridX.span(2), this.gridY.center(-2));
         Label({text: "You", fontSize: 20, fontWeight:800, fill: "white"}).addChildTo(self.myStatusBox).setPosition(0, -80);
         const myDefenseImg = Sprite("defense").addChildTo(self.myStatusBox).setPosition(0, -25);
-        const myDefenseLabel = Label({fontSize:40, fontWeight:800, fill:"white"}).addChildTo(myDefenseImg);
+        const myDefenseLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(myDefenseImg);
         const myLifeImg = Sprite("life").addChildTo(self.myStatusBox).setPosition(0, 50);
-        const myLifeLabel = Label({fontSize:40, fontWeight:800, fill:"white"}).addChildTo(myLifeImg);
+        const myLifeLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(myLifeImg);
 
         // 自ステータス再描画
         function refreshMyStatusBox() {
@@ -452,10 +451,10 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         }).addChildTo(this).setPosition(this.gridX.center(4), this.gridY.span(1));
         Label({text: "Enemy", fontSize: 20, fontWeight:800, fill: "white"}).addChildTo(self.enemyStatusBox).setPosition(-90, -10);
         const enemyDefenseImg = Sprite("defense").addChildTo(self.enemyStatusBox).setPosition(0, 0);
-        const enemyDefenseLabel = Label({fontSize:40, fontWeight:800, fill:"white"}).addChildTo(enemyDefenseImg);
+        const enemyDefenseLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(enemyDefenseImg);
         enemyDefenseLabel.text = "0";
         const enemyLifeImg = Sprite("life").addChildTo(self.enemyStatusBox).setPosition(70, 0);
-        const enemyLifeLabel = Label({fontSize:40, fontWeight:800, fill:"white"}).addChildTo(enemyLifeImg);
+        const enemyLifeLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(enemyLifeImg);
         enemyLifeLabel.text = "10";
 
         // 敵ステータス再描画
@@ -491,7 +490,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 }
                 self.enemyActions[i] = Sprite(img).addChildTo(self)
                     .setPosition(self.enemyStatusBox.x - 120 + i * 32, self.enemyStatusBox.y + 40).setScale(0.5);
-                Label({text:actions[i].point, fontSize:30, fontWeight:800, fill:"white"}).addChildTo(self.enemyActions[i]);
+                Label({text:actions[i].point, fontSize:50, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(self.enemyActions[i]);
             }
         }
 
@@ -1242,7 +1241,7 @@ function Card(cardID, isLarge) {
 
     // let attackBoxSize = 32;
     let attackBoxSize = 0.5;
-    let attackFontSize = 30;
+    let attackFontSize = 50;
 
     if (isLarge) {
         cardWidth *= 2;
@@ -1302,6 +1301,8 @@ function Card(cardID, isLarge) {
             fontSize: attackFontSize,
             fill: "white",
             fontWeight: 800,
+            stroke: "black",
+            strokeWidth: 2,
         }).addChildTo(self.ui.attackBox).setPosition(0, 0);
     }
     
@@ -1314,6 +1315,8 @@ function Card(cardID, isLarge) {
             fontSize: attackFontSize,
             fill: "white",
             fontWeight: 800,
+            stroke: "black",
+            strokeWidth: 2,
         }).addChildTo(self.ui.defenseBox).setPosition(0, 0);
     }
 
@@ -1372,7 +1375,7 @@ function Card(cardID, isLarge) {
             self.title = "キリ";
             self.img = "card-kiri";
             self.description = "";
-            self.attack = 1;
+            self.attack = 99;
             self.defense = 0;
             self.skill = null;
         } else if (id === "03") {
