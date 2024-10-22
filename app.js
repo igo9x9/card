@@ -476,7 +476,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                     self.enemyActions[i] = null;
                 }
                 if (!actions[i]) {
-                    break;
+                    continue;
                 }
                 let color = "";
                 if (actions[i].name === "attack") {
@@ -486,13 +486,13 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 } else if (actions[i].name === "life") {
                     color = "deeppink";
                 } else {
-                    break;
+                    continue;
                 }
 
-                self.enemyActions[i] = CircleShape({radius:32, fill:color, strokeWidth:5, stroke: "black"})
+                self.enemyActions[i] = CircleShape({radius:50, fill:color, strokeWidth:5, stroke: "black"})
                     .addChildTo(self)
-                    .setPosition(self.enemyStatusBox.x - 120 + i * 32, self.enemyStatusBox.y + 40).setScale(0.5);
-                Label({text:actions[i].point, fontSize:50, fontWeight:800, fill:"white", stroke:"black", strokeWidth:5}).addChildTo(self.enemyActions[i]);
+                    .setPosition(self.enemyStatusBox.x - 150 + i * 52, self.enemyStatusBox.y + 40).setScale(0.5);
+                Label({text:actions[i].point, fontSize:70, fontWeight:800, fill:"white", stroke:"black", strokeWidth:5}).addChildTo(self.enemyActions[i]);
             }
         }
 
@@ -575,12 +575,12 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵の攻撃
         function attackToPlayer(enemyAction, damage) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 10, fill: "firebrick", stroke:0,}).addChildTo(self);
+                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"firebrick", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
-                .to({scaleX: 4, scaleY: 4}, 200)
+                .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
-                .to({x: self.myStatusBox.x, y: self.myStatusBox.y, scaleX: 0.1, scaleY: 0.1}, 200, "easeInQuart")
+                .to({x: self.myStatusBox.x, y: self.myStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeInQuart")
                 .call(function() {
                     self.myStatusBox.tweener.by({y:-20}, 30).by({y:20}, 50)
                     .call(function() {
@@ -638,12 +638,12 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵のシールドアップ
         function enemyShieldUp(enemyAction, point) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 10, fill: "blue", stroke:0,}).addChildTo(self);
+                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"blue", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
-                .to({scaleX: 4, scaleY: 4}, 200)
+                .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
-                .to({x: self.enemyStatusBox.x, y: self.enemyStatusBox.y, scaleX: 0.1, scaleY: 0.1}, 200, "easeOutQuart")
+                .to({x: self.enemyStatusBox.x, y: self.enemyStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeOutQuart")
                 .call(function() {
                     // ステータス変化アニメーション
                     const upNum = Label({text:"+" + point, fontSize:30, fontWeight:800, fill: "blue", stroke:"white", strokeWidth: 3});
@@ -668,12 +668,12 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵の回復
         function enemyLifeUp(enemyAction, point) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 10, fill: "deeppink", stroke:0,}).addChildTo(self);
+                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"deeppink", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
-                .to({scaleX: 4, scaleY: 4}, 200)
+                .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
-                .to({x: self.enemyStatusBox.x + 60, y: self.enemyStatusBox.y, scaleX: 0.1, scaleY: 0.1}, 200, "easeOutQuart")
+                .to({x: self.enemyStatusBox.x + 60, y: self.enemyStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeOutQuart")
                 .call(function() {
                     // ステータス変化アニメーション
                     const upNum = Label({text:"+" + point, fontSize:30, fontWeight:800, fill: "blue", stroke:"white", strokeWidth: 3});
@@ -698,12 +698,12 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 敵に攻撃
         function attackToEnemy(targetCard) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 10, fill: "firebrick", stroke:0,}).addChildTo(self);
+                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"firebrick", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
                 ball.setPosition(self.handsLayer.x + targetCard.ui.x + targetCard.ui.attackBox.x, self.handsLayer.y + targetCard.ui.y + targetCard.ui.attackBox.y)
                 .tweener
-                .to({scaleX: 4, scaleY: 4}, 200)
+                .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
-                .to({x: self.enemyStatusBox.x, y: self.enemyStatusBox.y, scaleX: 0.1, scaleY: 0.1}, 200, "easeInQuart")
+                .to({x: self.enemyStatusBox.x, y: self.enemyStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeInQuart")
                 .call(function() {
                     self.enemyStatusBox.tweener.by({y:-20}, 30).by({y:20}, 50)
                     .call(function() {
@@ -761,12 +761,12 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 自分のシールドアップ
         function myShieldUp(targetCard) {
             return Flow(function(resolve) {
-                const ball = CircleShape({radius: 10, fill: "blue", stroke:0,}).addChildTo(self);
+                const ball = CircleShape({radius: 100, fill: "transparent", stroke:"blue", strokeWidth: 20,}).setScale(0.1).addChildTo(self);
                 ball.setPosition(self.handsLayer.x + targetCard.ui.x + targetCard.ui.defenseBox.x, self.handsLayer.y + targetCard.ui.y + targetCard.ui.defenseBox.y)
                 .tweener
-                .to({scaleX: 4, scaleY: 4}, 200)
+                .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
-                .to({x: self.myStatusBox.x, y: self.myStatusBox.y, scaleX: 0.1, scaleY: 0.1}, 200, "easeInQuart")
+                .to({x: self.myStatusBox.x, y: self.myStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeInQuart")
                 .call(function() {
                     // ステータス変化アニメーション
                     const upNum = Label({text:"+" + targetCard.defense, fontSize:30, fontWeight:800, fill: "blue", stroke:"white", strokeWidth: 3});
@@ -1091,7 +1091,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 refreshEnemyStatusBox();
                 doEnemyAction(0).then(function() {
                     doEnemyAction(1).then(function() {
-                        startMyTurn();
+                        doEnemyAction(2).then(function() {
+                            startMyTurn();
+                        });
                     });
                 });
             });
@@ -1243,7 +1245,7 @@ function Card(cardID, isLarge) {
 
     // let attackBoxSize = 32;
     let attackBoxSize = 0.5;
-    let attackFontSize = 50;
+    let attackFontSize = 70;
 
     if (isLarge) {
         cardWidth *= 2;
@@ -1298,9 +1300,9 @@ function Card(cardID, isLarge) {
     if (self.attack > 0) {
         // self.ui.attackBox = Sprite("attack").setScale(attackBoxSize).addChildTo(self.ui)
         //     .setPosition((-1) * cardWidth/2 + attackBoxSize/2 + 10, cardHeight/2 - attackBoxSize/2 - 10);
-        self.ui.attackBox = CircleShape({radius:32, fill:"firebrick", strokeWidth:5, stroke: "black"})
+        self.ui.attackBox = CircleShape({radius:50, fill:"firebrick", strokeWidth:5, stroke: "black"})
             .setScale(attackBoxSize).addChildTo(self.ui)
-            .setPosition((-1) * cardWidth/2 + attackBoxSize/2 + 10, cardHeight/2 - attackBoxSize/2 - 10);
+            .setPosition((-1) * cardWidth/2 + attackBoxSize/2 + 20, cardHeight/2 - attackBoxSize/2 - 20);
         self.ui.attackLabel = Label({
             text: self.attack,
             fontSize: attackFontSize,
@@ -1314,9 +1316,9 @@ function Card(cardID, isLarge) {
     // 防御力
     if (self.defense > 0) {
         // self.ui.defenseBox = Sprite("defense")
-        self.ui.defenseBox = CircleShape({radius:32, fill:"blue", strokeWidth:5, stroke: "black"})
+        self.ui.defenseBox = CircleShape({radius:50, fill:"blue", strokeWidth:5, stroke: "black"})
             .setScale(attackBoxSize).addChildTo(self.ui)
-            .setPosition(cardWidth/2 - attackBoxSize/2 - 10, cardHeight/2 - attackBoxSize/2 - 10);
+            .setPosition(cardWidth/2 - attackBoxSize/2 - 20, cardHeight/2 - attackBoxSize/2 - 20);
         self.ui.defenseLabel = Label({
             text: self.defense,
             fontSize: attackFontSize,
@@ -1451,7 +1453,7 @@ phina.define('CardDetailScene', {
         const dialog = RectangleShape({
             width: 500,
             height: height,
-            fill: "black",
+            fill: "DimGray",
             stroke: "black",
             strokeWidth: 5,
             cornerRadius: 5,
@@ -1600,13 +1602,18 @@ function Cards() {
                 [{
                     name: "attack",
                     point: 1,
-                }],[{
+                }],
+                [{
                     name: "attack",
                     point: 1,
                 },{
                     name: "defense",
                     point: 1,
-                }],[{
+                },{
+                    name: "life",
+                    point: 1,
+                }],
+                [{
                     name: "life",
                     point: 2,
                 }]
