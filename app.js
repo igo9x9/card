@@ -17,6 +17,10 @@ const ASSETS = {
         "card-gake": "img/card-gake.png",
         "card-snake": "img/card-snake.png",
         "card-hane": "img/card-hane.png",
+        "card-nikenbiraki": "img/card-nikenbiraki.png",
+        "card-elephant": "img/card-elephant.png",
+        "card-kanashimi": "img/card-kanashimi.png",
+        "card-sityo": "img/card-sityo.png",
         "attack": "img/attack.png",
         "defense": "img/defense.png",
         "life": "img/life.png",
@@ -1287,6 +1291,8 @@ function Card(cardID, isLarge) {
     });
 
     createFromCardID(self.id);
+    self.backupAttack = self.attack;
+    self.backupDefense = self.defense;
 
     // 画像
     // RectangleShape({
@@ -1318,8 +1324,6 @@ function Card(cardID, isLarge) {
 
     // 攻撃力
     if (self.attack > 0) {
-        // self.ui.attackBox = Sprite("attack").setScale(attackBoxSize).addChildTo(self.ui)
-        //     .setPosition((-1) * cardWidth/2 + attackBoxSize/2 + 10, cardHeight/2 - attackBoxSize/2 - 10);
         self.ui.attackBox = CircleShape({radius:50, fill:"firebrick", strokeWidth:5, stroke: "black"})
             .setScale(attackBoxSize).addChildTo(self.ui)
             .setPosition((-1) * cardWidth/2 + attackBoxSize/2 + 20, cardHeight/2 - attackBoxSize/2 - 20);
@@ -1335,7 +1339,6 @@ function Card(cardID, isLarge) {
     
     // 防御力
     if (self.defense > 0) {
-        // self.ui.defenseBox = Sprite("defense")
         self.ui.defenseBox = CircleShape({radius:50, fill:"blue", strokeWidth:5, stroke: "black"})
             .setScale(attackBoxSize).addChildTo(self.ui)
             .setPosition(cardWidth/2 - attackBoxSize/2 - 20, cardHeight/2 - attackBoxSize/2 - 20);
@@ -1352,7 +1355,6 @@ function Card(cardID, isLarge) {
     // 攻撃力アップ
     self.attackUp = function(point) {
         if (self.attack === 0) return;
-        self.oldAttack = self.attack;
         self.attack += point;
         self.ui.attackBox.setScale(2)
         .tweener
@@ -1367,7 +1369,6 @@ function Card(cardID, isLarge) {
     // 防御力アップ
     self.defenseUp = function(point) {
         if (self.defense === 0) return;
-        self.oldDefense = self.defense;
         self.defense += point;
         self.ui.defenseBox.setScale(2)
         .tweener
@@ -1381,12 +1382,14 @@ function Card(cardID, isLarge) {
 
     // 攻撃力と防御力を元に戻す
     self.reset = function() {
-        if (self.oldAttack) {
-            self.attack = self.oldAttack;
+
+        if (self.backupAttack > 0) {
+            self.attack = self.backupAttack;
             self.ui.attackLabel.text = self.attack;
         }
-        if (self.oldDefense) {
-            self.defense = self.oldDefense;
+
+        if (self.backupDefense > 0) {
+            self.defense = self.backupDefense;
             self.ui.defenseLabel.text = self.defense;
         }
     };
@@ -1415,29 +1418,29 @@ function Card(cardID, isLarge) {
             self.defense = 0;
             self.skill = null;
         } else if (id === "04") {
-            self.title = "ナラビ";
-            self.img = "card-kiri";
-            self.description = "XXXXXXXXXXXXXXX";
-            self.attack = 1;
+            self.title = "シチョウ";
+            self.img = "card-sityo";
+            self.description = "";
+            self.attack = 2;
             self.defense = 0;
             self.skill = null;
         } else if (id === "05") {
             self.title = "厚みの力";
-            self.img = "card-kiri";
+            self.img = "card-elephant";
             self.description = "このターンに限り、すべてのカードの攻撃力と防御力が２倍。";
             self.attack = 0;
             self.defense = 0;
             self.skill = "攻撃力防御力２倍";
         } else if (id === "06") {
-            self.title = "ツギ";
-            self.img = "card-gake";
-            self.description = "XXXXXXXXXXXXXXX";
+            self.title = "二間ビラキ";
+            self.img = "card-nikenbiraki";
+            self.description = "";
             self.attack = 0;
             self.defense = 1;
             self.skill = null;
         } else if (id === "07") {
             self.title = "アキ三角";
-            self.img = "card-snake";
+            self.img = "card-kanashimi";
             self.description = "攻撃力も防御力もない。";
             self.attack = 0;
             self.defense = 0;
