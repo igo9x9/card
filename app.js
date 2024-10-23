@@ -28,6 +28,13 @@ const ASSETS = {
         "attack": "img/attack.png",
         "defense": "img/defense.png",
         "life": "img/life.png",
+        "monster01": "img/monster01.png",
+        "monster02": "img/monster02.png",
+        "monster03": "img/monster03.png",
+        "monster04": "img/monster04.png",
+        "monster05": "img/monster05.png",
+        "monster06": "img/monster06.png",
+        "back01": "img/back01.png",
     }
 };
 
@@ -389,15 +396,15 @@ phina.define('Scrollable', {
 //     alert("予期しないエラー：" + message);
 //     return true;
 // };
-function BasicButton(param/* {text:string, width: int, height: int, primary: boolean, disable: boolean, callback: function} */) {
+function BasicButton(param/* {text:string, width: int, height: int, primary: boolean, disable: boolean, dark: boolean, callback: function} */) {
 
     const self = this;
 
     self.ui = RectangleShape({
         width: param.width,
         height: param.height,
-        fill: "white",
-        stroke: "black",
+        fill: param.dark ? "black" : "white",
+        stroke: param.dark ? "white" : "black",
         strokeWidth: 5,
         cornerRadius: 5,
     });
@@ -414,6 +421,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         text: param.text,
         fontSize: 25,
         fontWeight: 800,
+        fill: param.dark ? "white" : "black",
     }).addChildTo(self.ui);
 
 }phina.define('BattleScene', {
@@ -425,8 +433,11 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
         self.backgroundColor = "gray";
 
+        // 背景画像
+        Sprite("back01").addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+
         // 敵画像
-        Sprite(param.enemy.img).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+        const enemyImage = Sprite(param.enemy.img).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
 
         // 自ステータス
         self.myStatusBox = RectangleShape({
@@ -1045,10 +1056,6 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         }
 
         this.on("resume", function() {
-            if (self.playerWin) {
-                self.exit("MainScene");
-                return;
-            }
             if (self.moveToLayoutCard) {
                 
                 // gard
@@ -1096,7 +1103,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
 
         // ターン終了ボタン
-        const turnEndButton = new BasicButton({text: "自ターン終了", width: 300, height: 70, primary: true});
+        const turnEndButton = new BasicButton({text: "TURN END", width: 300, height: 70, dark: true});
         turnEndButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.span(17))
         .setInteractive(true)
         .on("pointstart", function() {
@@ -1150,10 +1157,34 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // GameWin確認
         function isGameWin() {
             if (param.enemy.hp === 0) {
-                App.pushScene(GameWinScene({callback:function() {
-                    self.exit("MainScene");
-                }}));
                 waiting = false;
+                enemyImage.tweener
+                    .to({alpha:0},10).wait(50).to({alpha:1},10).wait(50)
+                    .to({alpha:0},10).wait(50).to({alpha:1},10).wait(50)
+                    .to({alpha:0},10).wait(30).to({alpha:1},10).wait(30)
+                    .to({alpha:0},10).wait(30).to({alpha:1},10).wait(30)
+                    .to({alpha:0},10).wait(10).to({alpha:1},10).wait(10)
+                    .to({alpha:0},10).wait(10).to({alpha:1},10).wait(10)
+                    .to({alpha:0},10).wait(10).to({alpha:1},10).wait(10)
+                    .to({alpha:0},10).wait(10).to({alpha:1},10).wait(10)
+                    .to({alpha:0},10).wait(10).to({alpha:1},10).wait(10)
+                    .to({alpha:0},10).wait(10).to({alpha:1},10).wait(10)
+                    .to({alpha:0},300)
+                    .wait(500)
+                    .call(function() {
+                        const fadeOut = RectangleShape({
+                            width: self.width,
+                            height: self.height,
+                            fill: "black",
+                        }).addChildTo(self).setPosition(self.gridX.center(), self.gridY.center());
+                        fadeOut.alpha = 0;
+                        fadeOut.tweener.to({alpha:1}, 1000)
+                        .call(function() {
+                            self.exit("MainScene");
+                        })
+                        .play();
+                    })
+                    .play();
                 return true;
             }
             return false;
@@ -1255,6 +1286,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         function setup() {
             return Flow(function(resolve) {
                 self.myStatusBox.tweener
+                    .wait(1000)
                     .to({x: self.gridX.span(2)}, 200)
                     .call(function() {
                         stock.ui.tweener.to({x:self.gridX.center(6)}, 200).play();
@@ -1772,10 +1804,10 @@ function CardsUI(cards /* Cards */) {
     // 敵ステータス決定
     switch (id) {
         case "01":
-            self.hp = 1;
+            self.hp = 3;
             self.defense = 1;
             self.defaultDefense = 0;
-            self.img = "monster-01";
+            self.img = "monster04";
             self.actions = [
                 [{
                     name: "attack",
