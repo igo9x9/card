@@ -434,7 +434,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
             height: 200,
             fill: "rgba(0, 0, 0, 0.6)",
             stroke: 0,
-        }).addChildTo(this).setPosition(this.gridX.span(2), this.gridY.center(-2));
+        }).addChildTo(this).setPosition(this.gridX.span(-2), this.gridY.center(-2));
         Label({text: "You", fontSize: 20, fontWeight:800, fill: "white"}).addChildTo(self.myStatusBox).setPosition(0, -80);
         const myDefenseImg = Sprite("defense").addChildTo(self.myStatusBox).setPosition(0, -25);
         const myDefenseLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(myDefenseImg);
@@ -581,7 +581,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         const myCards = new Cards();
         myCards.createNewCards();
         const stock = new CardsUI(myCards);
-        stock.ui.addChildTo(this).setPosition(this.gridX.center(6), this.gridY.center(1));
+        stock.ui.addChildTo(this).setPosition(this.gridX.center(10), this.gridY.center(1));
 
         let cards = [];
 
@@ -959,7 +959,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
         // 捨て札の山
         const discard = new CardsUI();
-        discard.ui.addChildTo(this).setPosition(this.gridX.center(-6), this.gridY.center(1));
+        discard.ui.addChildTo(this).setPosition(this.gridX.center(-10), this.gridY.center(1));
 
         // カードを捨て札の山に送るアニメーション
         function moveCardToDiscard(targetCard) {
@@ -1097,7 +1097,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
         // ターン終了ボタン
         const turnEndButton = new BasicButton({text: "自ターン終了", width: 300, height: 70, primary: true});
-        turnEndButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.span(15))
+        turnEndButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.span(17))
         .setInteractive(true)
         .on("pointstart", function() {
 
@@ -1150,7 +1150,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // GameWin確認
         function isGameWin() {
             if (param.enemy.hp === 0) {
-                App.pushScene(GameWinScene({callback:function() {self.exit("MainScene")}}));
+                App.pushScene(GameWinScene({callback:function() {
+                    self.exit("MainScene");
+                }}));
                 waiting = false;
                 return true;
             }
@@ -1248,44 +1250,30 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
     
             });
         }
+
+        // ゲーム開始前の準備
+        function setup() {
+            return Flow(function(resolve) {
+                self.myStatusBox.tweener
+                    .to({x: self.gridX.span(2)}, 200)
+                    .call(function() {
+                        stock.ui.tweener.to({x:self.gridX.center(6)}, 200).play();
+                        discard.ui.tweener.to({x:self.gridX.center(-6)}, 200).play();
+                        turnEndButton.ui.tweener.to({y:self.gridY.span(15)}, 200).play();
+                    })
+                    .wait(500)
+                    .call(function() {
+                        resolve();
+                    })
+                    .play();
+            });
+        }
     
-
-        // const test1Button = new BasicButton({text: "none", width:150, height:50});
-        // test1Button.ui.addChildTo(this).setPosition(this.gridX.span(3), this.gridY.span(3))
-        //     .setInteractive(true)
-        //     .on("pointstart", function() {
-    
-        //         if (self.wait) return;
-
-        //     });
-
-        // const test2Button = new BasicButton({text: "Deal", width:150, height:50});
-        // test2Button.ui.addChildTo(this).setPosition(this.gridX.span(7), this.gridY.span(3))
-        //     .setInteractive(true)
-        //     .on("pointstart", function() {
-        //         if (self.wait) return;
-        //         dealCards();
-        //     });
-
-        // const test3Button = new BasicButton({text: "Return", width:150, height:50});
-        // test3Button.ui.addChildTo(this).setPosition(this.gridX.span(11), this.gridY.span(3))
-        //     .setInteractive(true)
-        //     .on("pointstart", function() {
-        //         if (self.wait) return;
-        //         returnCardToStockFromDiscard();
-        //     });
-
-        // const test4Button = new BasicButton({text: "AT to E", width:150, height:50});
-        // test4Button.ui.addChildTo(this).setPosition(this.gridX.span(3), this.gridY.span(1))
-        //     .setInteractive(true)
-        //     .on("pointstart", function() {
-        //         if (self.wait) return;
-
-        //     });
-
-
         // ゲーム開始
-        startMyTurn();
+        waiting = true;
+        setup().then(function() {
+            startMyTurn();
+        });
         
 
     },
