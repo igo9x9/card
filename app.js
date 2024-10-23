@@ -7,6 +7,9 @@ const version = "1.0";
 // 場札（layout）
 // 捨て札（discard）
 
+// ユーザの操作を抑止したい間はtrueにする
+let waiting = false;
+
 const ASSETS = {
     image: {
         "stock": "img/stock.png",
@@ -21,6 +24,7 @@ const ASSETS = {
         "card-elephant": "img/card-elephant.png",
         "card-kanashimi": "img/card-kanashimi.png",
         "card-sityo": "img/card-sityo.png",
+        "card-simari": "img/card-simari.png",
         "attack": "img/attack.png",
         "defense": "img/defense.png",
         "life": "img/life.png",
@@ -30,8 +34,12 @@ const ASSETS = {
 phina.main(function() {
     App = GameApp({
         assets: ASSETS,
-        startLabel: 'BattleScene',
+        startLabel: 'MainScene',
         scenes: [
+            {
+                label: 'MainScene',
+                className: 'MainScene',
+            },
             {
                 label: 'BattleScene',
                 className: 'BattleScene',
@@ -410,19 +418,12 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
 }phina.define('BattleScene', {
     superClass: 'DisplayScene',
-    waiting: false,
     init: function(param/*{player:Player, enemy:Enemy}*/) {
         this.superInit(param);
 
         const self = this;
 
         self.backgroundColor = "gray";
-
-        //@@@@@
-        param.player = new Player();
-        param.enemy = new Enemy("01");
-        //@@@@@
-
 
         // 敵画像
         Sprite(param.enemy.img).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
@@ -442,7 +443,10 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
         // 自ステータス再描画
         function refreshMyStatusBox() {
+            if (param.player.defense < 0) param.player.defense = 0;
             myDefenseLabel.text = param.player.defense;
+
+            if (param.player.hp < 0) param.player.hp = 0;
             myLifeLabel.text = param.player.hp;
         }
         refreshMyStatusBox();
@@ -540,7 +544,6 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // これから場に出そうとしているカード
         self.moveToLayoutCard = null;
 
-
         // 場札
         self.layoutCards = [null, null];
 
@@ -575,9 +578,10 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         self.handsLayer = DisplayElement().addChildTo(self).setPosition(this.gridX.center(), this.gridY.center(4.2));
 
         // 山札の山
-        const stock = new Cards();
+        const myCards = new Cards();
+        myCards.createNewCards();
+        const stock = new CardsUI(myCards);
         stock.ui.addChildTo(this).setPosition(this.gridX.center(6), this.gridY.center(1));
-        stock.createNewCards();
 
         let cards = [];
 
@@ -588,6 +592,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 Label({text:damage, fontSize:200, fill:"white", fontWeight:800, stroke: "black", strokeWidth: 20}).addChildTo(ball);
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
+                .call(function() {
+                    enemyAction.remove();
+                })
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
                 .to({x: self.myStatusBox.x, y: self.myStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeInQuart")
@@ -637,6 +644,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                     .wait(700)
                     .call(function() {
                         ball.remove();
+                        enemyAction.remove();
                         resolve();
                     })
                     .play();
@@ -652,6 +660,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 Label({text:point, fontSize:200, fill:"white", fontWeight:800, stroke: "black", strokeWidth: 20}).addChildTo(ball);
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
+                .call(function() {
+                    enemyAction.remove();
+                })
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
                 .to({x: self.enemyStatusBox.x, y: self.enemyStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeOutQuart")
@@ -684,6 +695,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
                 ball.setPosition(enemyAction.x, enemyAction.y)
                 .tweener
+                .call(function() {
+                    enemyAction.remove();
+                })
                 .to({scaleX: 0.4, scaleY: 0.4}, 200)
                 .wait(200)
                 .to({x: self.enemyStatusBox.x + 60, y: self.enemyStatusBox.y, scaleX: 0.01, scaleY: 0.01}, 200, "easeOutQuart")
@@ -874,7 +888,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                     card.ui.setInteractive(true);
                     card.ui.clear("pointstart");
                     card.ui.on("pointstart", function() {
-                        if (self.waiting) return;
+                        if (waiting) return;
                         App.pushScene(CardDetailScene({
                             cardID: card.id,
                             button1: {
@@ -884,7 +898,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                                 },
                             }
                         }));
-                    })
+                    });
                 }
 
                 function a() {
@@ -917,6 +931,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
                 function dealCardAnimation(targetHand, targetX) {
                     return new Promise((resolve) => {
+                        targetHand.ui.show();
                         targetHand.ui.addChildTo(self.handsLayer).setPosition(stock.ui.x - self.handsLayer.x, stock.ui.y - self.handsLayer.y).setScale(0.1);
                         targetHand.ui.tweener.to({x: targetX, y: 0, scaleX: 1, scaleY: 1}, 200)
                         .call(function() {
@@ -943,7 +958,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         }
 
         // 捨て札の山
-        const discard = new Cards();
+        const discard = new CardsUI();
         discard.ui.addChildTo(this).setPosition(this.gridX.center(-6), this.gridY.center(1));
 
         // カードを捨て札の山に送るアニメーション
@@ -956,6 +971,10 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
             .call(() => {
                 discard.add(targetCard);
                 targetCard.status = "discard";
+                // いろいろ初期化
+                targetCard.ui.hide();
+                targetCard.ui.setScale(1);
+                targetCard.ui.clear("pointstart");
             })
             .play();
         }
@@ -1026,6 +1045,10 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         }
 
         this.on("resume", function() {
+            if (self.playerWin) {
+                self.exit("MainScene");
+                return;
+            }
             if (self.moveToLayoutCard) {
                 
                 // gard
@@ -1055,7 +1078,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                     self.moveToLayoutCard.ui.clear("pointstart");
                     const id = self.moveToLayoutCard.id;
                     self.moveToLayoutCard.ui.on("pointstart", function() {
-                        if (self.waiting) return;
+                        if (waiting) return;
                         App.pushScene(CardDetailScene({
                             cardID: id,
                         }));
@@ -1078,7 +1101,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         .setInteractive(true)
         .on("pointstart", function() {
 
-            if (self.waiting) return;
+            if (waiting) return;
 
             endOfMyTurn();
 
@@ -1087,12 +1110,14 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // 自分のターン終了
         function endOfMyTurn() {
 
-            self.waiting = true;
+            waiting = true;
 
             // 場札の１番目の処理が終わってから
             playLayoutCard(0).then(function () {
+                if (isGameWin()) return;
                 // 場札の２番目を処理して
                 playLayoutCard(1).then(function() {
+                    if (isGameWin()) return;
                     // すべてのカードを捨て札の山へ移動
                     moveToDiscardAll();
 
@@ -1110,8 +1135,11 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 param.enemy.turnBegin();
                 refreshEnemyStatusBox();
                 doEnemyAction(0).then(function() {
+                    if (isGameOver()) return;
                     doEnemyAction(1).then(function() {
+                        if (isGameOver()) return;
                         doEnemyAction(2).then(function() {
+                            if (isGameOver()) return;
                             startMyTurn();
                         });
                     });
@@ -1119,10 +1147,30 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
             });
         }
 
+        // GameWin確認
+        function isGameWin() {
+            if (param.enemy.hp === 0) {
+                App.pushScene(GameWinScene({callback:function() {self.exit("MainScene")}}));
+                waiting = false;
+                return true;
+            }
+            return false;
+        }
+
+        // GameOver確認
+        function isGameOver() {
+            if (param.player.hp === 0) {
+                App.pushScene(GameOverScene());
+                waiting = false;
+                return true;
+            }
+            return false;
+        }
+
         // 自分のターン開始
         function startMyTurn() {
 
-            self.waiting = true;
+            waiting = true;
 
             // 敵の次のアクションを表示
             param.enemy.turnEnd();
@@ -1134,7 +1182,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 dealCards().then(function() {
                     self.layoutBox1.show();
                     self.layoutBox2.show();
-                    self.waiting = false;
+                    waiting = false;
                 });
             });
         }
@@ -1263,8 +1311,7 @@ function Card(cardID, isLarge) {
     let imageY = -18;
     let descriptionY = 50;
 
-    // let attackBoxSize = 32;
-    let attackBoxSize = 0.5;
+    let attackBoxScale = 0.5;
     let attackFontSize = 70;
 
     if (isLarge) {
@@ -1276,7 +1323,7 @@ function Card(cardID, isLarge) {
         imageY *= 2;
         titleY *= 2;
         descriptionY *= 2;
-        attackBoxSize *= 2;
+        attackBoxScale *= 2;
     }
 
     self.ui = RectangleShape({
@@ -1325,8 +1372,8 @@ function Card(cardID, isLarge) {
     // 攻撃力
     if (self.attack > 0) {
         self.ui.attackBox = CircleShape({radius:50, fill:"firebrick", strokeWidth:5, stroke: "black"})
-            .setScale(attackBoxSize).addChildTo(self.ui)
-            .setPosition((-1) * cardWidth/2 + attackBoxSize/2 + 20, cardHeight/2 - attackBoxSize/2 - 20);
+            .setScale(attackBoxScale).addChildTo(self.ui)
+            .setPosition((-1) * cardWidth/2 + attackBoxScale/2 + 20, cardHeight/2 - attackBoxScale/2 - 20);
         self.ui.attackLabel = Label({
             text: self.attack,
             fontSize: attackFontSize,
@@ -1340,8 +1387,8 @@ function Card(cardID, isLarge) {
     // 防御力
     if (self.defense > 0) {
         self.ui.defenseBox = CircleShape({radius:50, fill:"blue", strokeWidth:5, stroke: "black"})
-            .setScale(attackBoxSize).addChildTo(self.ui)
-            .setPosition(cardWidth/2 - attackBoxSize/2 - 20, cardHeight/2 - attackBoxSize/2 - 20);
+            .setScale(attackBoxScale).addChildTo(self.ui)
+            .setPosition(cardWidth/2 - attackBoxScale/2 - 20, cardHeight/2 - attackBoxScale/2 - 20);
         self.ui.defenseLabel = Label({
             text: self.defense,
             fontSize: attackFontSize,
@@ -1397,12 +1444,12 @@ function Card(cardID, isLarge) {
     // カードIDからカードを生成
     function createFromCardID(id) {
         if (id === "01") {
-            self.title = "気合の一手";
-            self.img = "card-bear";
-            self.description = "このターンに限り、すべてのカードの攻撃力が２倍。";
+            self.title = "二間ビラキ";
+            self.img = "card-nikenbiraki";
+            self.description = "";
             self.attack = 0;
-            self.defense = 0;
-            self.skill = "攻撃力２倍";
+            self.defense = 1;
+            self.skill = null;
         } else if (id === "02") {
             self.title = "ハネ";
             self.img = "card-hane";
@@ -1411,33 +1458,33 @@ function Card(cardID, isLarge) {
             self.defense = 0;
             self.skill = null;
         } else if (id === "03") {
-            self.title = "ツケ";
-            self.img = "card-kiri";
-            self.description = "";
-            self.attack = 1;
-            self.defense = 0;
-            self.skill = null;
-        } else if (id === "04") {
             self.title = "シチョウ";
             self.img = "card-sityo";
             self.description = "";
             self.attack = 2;
             self.defense = 0;
             self.skill = null;
+        } else if (id === "04") {
+            self.title = "シマリ";
+            self.img = "card-simari";
+            self.description = "";
+            self.attack = 0;
+            self.defense = 1;
+            self.skill = null;
         } else if (id === "05") {
+            self.title = "キリ";
+            self.img = "card-kiri";
+            self.description = "";
+            self.attack = 2;
+            self.defense = 0;
+            self.skill = null;
+        } else if (id === "06") {
             self.title = "厚みの力";
             self.img = "card-elephant";
             self.description = "このターンに限り、すべてのカードの攻撃力と防御力が２倍。";
             self.attack = 0;
             self.defense = 0;
             self.skill = "攻撃力防御力２倍";
-        } else if (id === "06") {
-            self.title = "二間ビラキ";
-            self.img = "card-nikenbiraki";
-            self.description = "";
-            self.attack = 0;
-            self.defense = 1;
-            self.skill = null;
         } else if (id === "07") {
             self.title = "アキ三角";
             self.img = "card-kanashimi";
@@ -1445,6 +1492,13 @@ function Card(cardID, isLarge) {
             self.attack = 0;
             self.defense = 0;
             self.skill = null;
+        } else if (id === "08") {
+            self.title = "気合の一手";
+            self.img = "card-bear";
+            self.description = "このターンに限り、すべてのカードの攻撃力が２倍。";
+            self.attack = 0;
+            self.defense = 0;
+            self.skill = "攻撃力２倍";
         }
     }
 }
@@ -1531,21 +1585,128 @@ function Cards() {
         self.add(new Card("05"));
         self.add(new Card("06"));
         self.add(new Card("07"));
-        self.add(new Card("03"));
-        self.add(new Card("04"));
-        self.add(new Card("05"));
+        self.add(new Card("08"));
         self.add(new Card("01"));
         self.add(new Card("02"));
         self.add(new Card("03"));
         self.add(new Card("04"));
         self.add(new Card("05"));
+        self.add(new Card("06"));
+        self.add(new Card("07"));
+        self.add(new Card("08"));
         self.add(new Card("01"));
         self.add(new Card("02"));
         self.add(new Card("03"));
         self.add(new Card("04"));
         self.add(new Card("05"));
-        refreshCardNumLabel();
+        self.add(new Card("06"));
     };
+
+    self.add = function(card) {
+        list.push(card);
+    };
+
+    self.count = function() {
+        return list.length;
+    };
+
+}phina.define('CardsListScene', {
+    superClass: 'DisplayScene',
+    init: function(param/*{cards: Cards}*/) {
+        this.superInit(param);
+
+        const self = this;
+
+        const cards = param.cards;
+
+        self.backgroundColor = "DimGray";
+
+        for (let i = 0; i < cards.list.length; i++) {
+            cards.list[i].ui.show();
+        }
+    
+        const cardListArea = RectangleShape({
+            width: this.width,
+            height: this.gridY.unitWidth * 14,
+            fill: "DimGray",
+            strokeWidth: 0,
+        }).addChildTo(self).setOrigin(0,0).setPosition(-5,-5);
+
+        const scrollable = Scrollable().attachTo(cardListArea);
+        scrollable.setScrollType('y').enableClip();
+        scrollable.setMaxY(0);
+        if (Math.ceil(cards.list.length / 4) >= 4) {
+            scrollable.setMinY(-1 * Math.ceil(cards.list.length / 4) * 250 + cardListArea.height - 40);
+        } else {
+            scrollable.setMinY(0);
+        }
+
+        const layer = DisplayElement().addChildTo(cardListArea).setPosition(0,0);
+
+        let col = 1;
+        let row = 0;
+        for (let i = 0; i < cards.list.length; i++) {
+
+            if (i % 4 === 0) {
+                row += 1;
+            }
+
+            col = (i % 4) * 150 + 100;
+
+            cards.list[i].ui.addChildTo(layer).setPosition(col, row * 250 - 100);
+
+            cards.list[i].ui.setInteractive(true);
+
+            let pointStartDy;
+
+            cards.list[i].ui.on("pointstart", function(e) {
+                pointStartDy = e.pointer.y;
+            });
+
+            cards.list[i].ui.on("pointend", function(e) {
+                // Y座標が同じなら、タップしたと判定
+                if (pointStartDy !== e.pointer.y) {
+                    return;
+                }
+                App.pushScene(CardDetailScene({cardID: cards.list[i].id}));
+            });
+
+        }
+
+        const buttonArea = RectangleShape({
+            width: this.width,
+            height: this.gridY.unitWidth * 2,
+            fill: "black",
+            strokeWidth: 0,
+        }).addChildTo(self).setPosition(this.gridX.center(), this.gridY.span(15));
+
+        const closeButton = new BasicButton({
+            width: 200,
+            height: 50,
+            text: "閉じる",
+        });
+        closeButton.ui.addChildTo(buttonArea).setPosition(0, 0);
+        closeButton.ui.on("pointstart", function() {
+            // いろいろ元にもどす
+            for (let i = 0; i < cards.list.length; i++) {
+                cards.list[i].ui.hide();
+                cards.list[i].ui.clear("pointstart");
+                cards.list[i].ui.clear("pointend");
+            }
+            self.exit();
+        });
+
+    },
+});
+function CardsUI(cards /* Cards */) {
+    const self = this;
+
+    if (!cards) {
+        cards = new Cards();
+    }
+
+    const list = cards.list;
+    self.list = list;
 
     self.ui = RectangleShape({
         width: 64 + 20,
@@ -1555,6 +1716,12 @@ function Cards() {
     });
 
     const image = Sprite("stock").addChildTo(self.ui).setPosition(0, 10);
+
+    self.ui.setInteractive(true);
+    self.ui.on("pointstart", function() {
+        if (waiting) return;
+        App.pushScene(CardsListScene({cards: cards}));
+    });
 
     const cardNumLabel = Label({
         text: "0",
@@ -1617,7 +1784,7 @@ function Cards() {
     // 敵ステータス決定
     switch (id) {
         case "01":
-            self.hp = 3;
+            self.hp = 1;
             self.defense = 1;
             self.defaultDefense = 0;
             self.img = "monster-01";
@@ -1644,6 +1811,85 @@ function Cards() {
             break;
     }
 }
+phina.define('GameOverScene', {
+    superClass: 'DisplayScene',
+    init: function(param/*{}*/) {
+        this.superInit(param);
+
+        const self = this;
+
+        this.backgroundColor = "rgba(100,0,0,0.1)";
+
+        Label({
+            text: "GAME\nOVER",
+            fontSize: 150,
+            fontWeight: 800,
+            fill: "darkred",
+            stroke: "white",
+            strokeWidth: 20,
+        }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+
+        this.on("pointstart", function() {
+            self.exit();
+        });
+
+    },
+});
+phina.define('GameWinScene', {
+    superClass: 'DisplayScene',
+    init: function(param/*{callback: function}*/) {
+        this.superInit(param);
+
+        const self = this;
+
+        this.backgroundColor = "rgba(255,255,255,0.1)";
+
+        Label({
+            text: "WIN",
+            fontSize: 150,
+            fontWeight: 800,
+            fill: "darkblue",
+            stroke: "white",
+            strokeWidth: 20,
+        }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+
+        this.on("pointstart", function() {
+            setTimeout(function() {
+                param.callback();
+            }, 10)
+            self.exit();
+        });
+
+    },
+});
+phina.define('MainScene', {
+    superClass: 'DisplayScene',
+    init: function(param/*{}*/) {
+        this.superInit(param);
+
+        const self = this;
+
+        const player = new Player();
+
+        const goNext = function() {
+            const enemy = new Enemy("01");
+
+            self.exit("BattleScene", {player: player, enemy: enemy});
+        };
+
+        // 先へ進むボタン 
+        const goButton = new BasicButton({
+            width: 100,
+            height: 80,
+            text: "進む",
+        });
+        goButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+
+        goButton.ui.on("pointstart", function() {
+            goNext();
+        });
+    },
+});
 function Player() {
     const self = this;
 
@@ -1657,4 +1903,333 @@ function Player() {
         self.defense = self.defaultDefense;
     };
 
-}
+}// スクロール可能にするアクセサリ
+// https://qiita.com/simiraaaa/items/52de20a30a02600f2486
+phina.define('Scrollable', {
+    superClass: 'phina.accessory.Accessory',
+    scrollType: 'normal',
+    vx: 0,
+    vy: 0,
+    minX: -Infinity,
+    minY: -Infinity,
+    maxX: Infinity,
+    maxY: Infinity,
+    _locked: false,
+    init: function(target) {
+        this.superInit(target);
+        this.friction = 0.8;
+        this.on('attached', this._attached);
+    },
+    lock: function() {
+        this._locked = true;
+        this.vx = this.vy = 0;
+        return this;
+    },
+    unlock: function() {
+        this._locked = false;
+        return this;
+    },
+    // 摩擦をセット
+    setFriction: function(v) {
+        this.friction = v;
+        return this;
+    },
+    
+    setScrollType: function(type) {
+        this.scrollType = type;
+        return this;
+    },
+    
+    setMaxX: function(x) {
+        this.maxX = x;
+        return this;
+    },
+    
+    setMinX: function(x) {
+        this.minX = x;
+        return this;
+    },
+    
+    setMaxY: function(y) {
+        this.maxY = y;
+        return this;
+    },
+    
+    setMinY: function(y) {
+        this.minY = y;
+        return this;
+    },
+    
+    setMaxPosition: function(x, y) {
+        this.maxX = x;
+        this.maxY = y;
+        return this;
+    },
+    
+    setMinPosition: function(x, y) {
+        this.minX = x;
+        this.minY = y;
+        return this;
+    },
+    
+    // 枠外を描画しないようにする
+    enableClip: function() {
+        this.target.clip = function(canvas) {
+            var w = this.width;
+            var h = this.height;
+            canvas.beginPath().rect(-w * this.originX, -h * this.originY, w, h);
+        };
+        return this;
+    },
+    
+    // 枠外も描画するようにする
+    disableClip: function() {
+        this.target.clip = null;
+        return this;
+    },
+    
+    _attached: function(e) {
+        var target = this.target;
+        target.setInteractive(true);
+        this._setPointstart();
+        this._setPointmove();
+        this._setPointend();
+        this._setEnterframe();
+    },
+    
+    _setPointstart: function() {
+        var self = this;
+        this.target.on('pointstart', function(e) {
+            self.pointing = true;
+        });
+    },
+    _setPointmove: function() {
+        var self = this;
+        this.target.on('pointmove', function(e) {
+            if (self._locked) return;
+            self.getScrollMethod().move.call(this, e, self);
+        });
+    },
+    _setPointend: function() {
+        var self = this;
+        this.target.on('pointend', function(e) {
+            self.pointing = false;
+            if (self._locked) return;
+            self.vx = e.pointer.fx;
+            self.vy = e.pointer.fy;
+        });
+    },
+    
+    _setEnterframe: function() {
+        var self = this;
+        this.target.on('enterframe', function(e) {
+            if (self._locked) return;
+            if(self.pointing === false){
+                self.getScrollMethod().update(self);
+            }
+        }, this);
+    },
+    
+    getScrollMethod: function() {
+        return Scrollable.SCROLL_METHOD_MAP[this.scrollType] || Scrollable.SCROLL_METHOD_MAP.normal;
+    },
+    
+    _static: {
+        SCROLL_METHOD_MAP: {
+            x: {
+                move: function(e, self) {
+                    var dx = e.pointer.dx;
+                    var maxX = self.maxX;
+                    var minX = self.minX;
+                    this.children.forEach(function(child) {
+                        child.x += dx;
+                        if (child.x > maxX) {
+                            child.x = maxX;
+                        }
+                        if (child.x < minX) {
+                            child.x = minX;
+                        }
+                    });
+                },
+                
+                update: function(self) {
+                    var target = self.target;
+                    self.vx *= self.friction;
+                    if(Math.abs(self.vx) < 1){
+                        self.vx = 0;
+                    }
+                    var vx = self.vx;
+                    var maxX = self.maxX;
+                    var minX = self.minX;
+                    target.children.forEach(function(child) {
+                        child.x += vx;
+                        if (child.x > maxX) {
+                            child.x = maxX;
+                        }
+                        if (child.x < minX) {
+                            child.x = minX;
+                        }
+                    });
+                },
+            },
+            
+            y: {
+                move: function(e, self) {
+                    var dy = e.pointer.dy;
+                    var maxY = self.maxY;
+                    var minY = self.minY;
+                    this.children.forEach(function(child) {
+                        child.y += dy;
+                        if (child.y > maxY) {
+                            child.y = maxY;
+                        }
+                        if (child.y < minY) {
+                            child.y = minY;
+                        }
+                    });
+                },
+                update: function(self) {
+                    var target = self.target;
+                    self.vy *= self.friction;
+                    if(Math.abs(self.vy) < 1){
+                        self.vy= 0;
+                    }
+                    var vy = self.vy;
+                    var maxY = self.maxY;
+                    var minY = self.minY;
+                    target.children.forEach(function(child) {
+                        child.y += vy;
+                        if (child.y > maxY) {
+                            child.y = maxY;
+                        }
+                        if (child.y < minY) {
+                            child.y = minY;
+                        }
+                    });
+                },
+            },
+            
+            normal: {
+                move: function(e, self) {
+                    var p = e.pointer;
+                    var key = Math.abs(p.dx) < Math.abs(p.dy) ? 'y' : 'x';
+                    var v = p['d' + key];
+                    var max = self['max' + key.toUpperCase()];
+                    var min = self['min' + key.toUpperCase()];
+                    this.children.forEach(function(child) {
+                        child[key] += v;
+                        if (child[key] > max) {
+                            child[key] = max;
+                        }
+                        if (child[key] < min) {
+                            child[key] = min;
+                        }
+                    });
+                },
+                
+                update: function(self) {
+                    // 移動量が大きい方のみ処理する
+                    var key = Math.abs(self.vx) < Math.abs(self.vy) ? 'y' : 'x';
+                    var vkey = 'v' + key;
+                    var target = self.target;
+                    self[vkey] *= self.friction;
+                    if(Math.abs(self[vkey]) < 1){
+                        self[vkey] = 0;
+                    }
+                    
+                    var v = self[vkey];
+                    var max = self['max' + key.toUpperCase()];
+                    var min = self['min' + key.toUpperCase()];
+                    target.children.forEach(function(child) {
+                        child[key] += v;
+                        if (child[key] > max) {
+                            child[key] = max;
+                        }
+                        if (child[key] < min) {
+                            child[key] = min;
+                        }
+                    });
+                    
+                    // 階段状に移動してしまう対策
+                    self.vx = self.vy = 0;
+                    self[vkey] = v;
+                },
+            },
+            
+            flick: {
+                move: function(e, self) {
+                    var pos = {
+                        x: e.pointer.dx,
+                        y: e.pointer.dy,
+                    };
+                    var maxX = self.maxX;
+                    var maxY = self.maxY;
+                    var minX = self.minX;
+                    var minY = self.minY;
+                    this.children.forEach(function(child) {
+                        child.position.add(pos);
+                        
+                        if (child.x > maxX) {
+                            child.x = maxX;
+                        }
+                        
+                        if (child.x < minX) {
+                            child.x = minX;
+                        }
+                        
+                        if (child.y > maxY) {
+                            child.y = maxY;
+                        }
+                        
+                        if (child.y < minY) {
+                            child.y = minY;
+                        }
+                    });
+                },
+                
+                update: function(self) {
+                    var target = self.target;
+                    self.vx *= self.friction;
+                    self.vy *= self.friction;
+                    
+                    if(Math.abs(self.vx) < 1){
+                        self.vx = 0;
+                    }
+                    
+                    if(Math.abs(self.vy) < 1){
+                        self.vy = 0;
+                    }
+                    
+                    var pos = {
+                        x: self.vx,
+                        y: self.vy,
+                    };
+                    var maxX = self.maxX;
+                    var maxY = self.maxY;
+                    var minX = self.minX;
+                    var minY = self.minY;
+                    target.children.forEach(function(child) {
+                        child.position.add(pos);
+                        
+                        if (child.x > maxX) {
+                            child.x = maxX;
+                        }
+                        
+                        if (child.x < minX) {
+                            child.x = minX;
+                        }
+                        
+                        if (child.y > maxY) {
+                            child.y = maxY;
+                        }
+                        
+                        if (child.y < minY) {
+                            child.y = minY;
+                        }
+                    });
+                },
+            },
+            
+        }
+    }
+});
