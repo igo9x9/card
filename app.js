@@ -33,6 +33,7 @@ const ASSETS = {
         "card-kanashimi": "img/card-kanashimi.png",
         "card-sityo": "img/card-sityo.png",
         "card-simari": "img/card-simari.png",
+        "card-nidanbane": "img/card-nidanbane.png",
         "attack": "img/attack.png",
         "defense": "img/defense.png",
         "life": "img/life.png",
@@ -45,6 +46,7 @@ const ASSETS = {
         "back01": "img/back01.png",
         "dungeon01": "img/dungeon01.png",
         "dungeon02": "img/dungeon02.png",
+        "effect1": "img/effect1.png",
     }
 };
 
@@ -68,6 +70,14 @@ phina.main(function() {
             {
                 label: 'BattleScene',
                 className: 'BattleScene',
+            },
+            {
+                label: 'GetItemScene',
+                className: 'GetItemScene',
+            },
+            {
+                label: 'CardPlusScene',
+                className: 'CardPlusScene',
             },
         ],
     });
@@ -444,7 +454,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
 }phina.define('BattleScene', {
     superClass: 'DisplayScene',
-    init: function(param/*{player:Player, enemy:Enemy}*/) {
+    init: function(param/*{player:Player, enemy:Enemy, items:map.items}*/) {
         this.superInit(param);
 
         const self = this;
@@ -1228,7 +1238,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                         fadeOut.tweener.to({alpha:1}, 1000)
                         .call(function() {
                             returnAllCards();
-                            self.exit("MainScene");
+                            self.exit("GetItemScene", {items: param.items});
                         })
                         .play();
                     })
@@ -1599,12 +1609,19 @@ function Card(cardID, isLarge) {
             self.attack = 0;
             self.defense = 0;
             self.skill = "攻撃力２倍";
+        } else if (id === "09") {
+            self.title = "二段バネ";
+            self.img = "card-nidanbane";
+            self.description = "";
+            self.attack = 3;
+            self.defense = 0;
+            self.skill = "";
         }
     }
 }
 phina.define('CardDetailScene', {
     superClass: 'DisplayScene',
-    init: function(param /*{cardID:String, button1:{text:String, callback:func}, button2:{text:String, callback:func}}*/) {
+    init: function(param /*{cardID:String, button1:{text:String, callback:func}, button2:{text:String, callback:func}, returnObj: {}}*/) {
         this.superInit(param);
 
         const self = this;
@@ -1651,8 +1668,9 @@ phina.define('CardDetailScene', {
             button1.ui.addChildTo(this).setPosition(this.gridX.center(), button1Y);
             button1.ui.setInteractive(true);
             button1.ui.on("pointstart", function() {
+                param.returnObj && (param.returnObj.tobeExit = true);
                 if (param.button1.callback) {
-                    param.button1.callback();
+                    param.button1.callback(param.card);
                     self.exit();
                 }
             });
@@ -1671,6 +1689,206 @@ phina.define('CardDetailScene', {
         });
     },
 });
+phina.define('CardPlusScene', {
+    superClass: 'DisplayScene',
+    init: function(param/*{items}*/) {
+        this.superInit(param);
+
+        const self = this;
+
+        self.backgroundColor = "black";
+
+        //@@@@@@@@@@@
+        // const myCards = new Cards();
+        // myCards.createNewCards();
+        //@@@@@@@@@@@
+
+        const effect = Sprite("effect1").addChildTo(this).setPosition(this.gridX.center(), this.gridY.center()).hide();
+        effect.alpha = 0;
+
+        let selectCard1 = null;
+        let selectCard2 = null;
+
+        let copyCard1 = null;
+        let copyCard2 = null;
+
+        this.on("resume", function() {
+            if (selectCard1) {
+                if (copyCard1) {copyCard1.ui.remove();}
+                copyCard1 = new Card(selectCard1.id, true);
+                copyCard1.ui.addChildTo(self).setPosition(this.gridX.center(-4), this.gridY.center(-2));
+            }
+            if (selectCard2) {
+                if (copyCard2) {copyCard2.ui.remove();}
+                copyCard2 = new Card(selectCard2.id, true);
+                copyCard2.ui.addChildTo(self).setPosition(this.gridX.center(4), this.gridY.center(-2));
+            }
+        });
+
+        // カード置き場１
+        self.layoutBox1 = RectangleShape({
+            width: 260 + 10,
+            height: 390 + 10,
+            fill: "rgba(0, 0, 0, 0.2)",
+            stroke: "yellow",
+            strokeWidth: 1,
+        }).addChildTo(this).setPosition(this.gridX.center(-4), this.gridY.center(-2));
+        self.layoutBox1.setInteractive(true);
+        self.layoutBox1.on("pointstart", function() {
+            App.pushScene(CardsListScene({
+                cards: myCards,
+                button1: {
+                    text: "決定",
+                    callback: function(card) {
+                        selectCard1 = card;
+                    },
+                },
+                disableCards: [selectCard1, selectCard2],
+            }));
+        });
+
+        // カード置き場２
+        self.layoutBox2 = RectangleShape({
+            width: 260 + 10,
+            height: 390 + 10,
+            fill: "rgba(0, 0, 0, 0.2)",
+            stroke: "yellow",
+            strokeWidth: 1,
+        }).addChildTo(this).setPosition(this.gridX.center(4), this.gridY.center(-2));
+        self.layoutBox2.setInteractive(true);
+        self.layoutBox2.on("pointstart", function() {
+            App.pushScene(CardsListScene({
+                cards: myCards,
+                button1: {
+                    text: "決定",
+                    callback: function(card) {
+                        selectCard2 = card;
+                    },
+                },
+                disableCards: [selectCard1, selectCard2],
+            }));
+        });
+
+        const okButton = new BasicButton({
+            width: 200,
+            height: 80,
+            text: "合成する\n（魔石２消費）",
+            dark: true,
+            primary: true,
+        });
+        okButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(4));
+        okButton.ui.on("pointstart", function() {
+            if (!copyCard1 || !copyCard2) {
+                return;
+            }
+
+            okButton.ui.hide();
+            closeButton.ui.hide();
+
+            self.layoutBox1.remove();
+            self.layoutBox2.remove();
+
+            function commonEffect() {
+                return Flow(function(resolve) {
+
+                    effect.show().tweener.to({alpha: 1}, 5000)
+                    .call(function() {resolve();}).play();
+
+                    copyCard1.ui.tweener
+                    .to({x: self.gridX.center(-3), alpha: 0.6}, 1000, "easeInOutBack")
+                    .to({x: self.gridX.center(-1), alpha: 0.4}, 1000, "easeInOutBack")
+                    .to({x: self.gridX.center(), alpha: 0.2}, 1000, "easeInOutBack")
+                    .rotateBy(4, 50).rotateBy(-4, 50).rotateBy(4, 50).rotateBy(-4, 50)
+                    .rotateBy(4, 50).rotateBy(-4, 50).rotateBy(4, 50).rotateBy(-4, 50)
+                    .rotateBy(3, 50).rotateBy(-3, 50).rotateBy(3, 50).rotateBy(-3, 50)
+                    .rotateBy(3, 50).rotateBy(-3, 50).rotateBy(3, 50).rotateBy(-3, 50)
+                    .rotateBy(2, 50).rotateBy(-2, 50).rotateBy(2, 50).rotateBy(-2, 50)
+                    .rotateBy(2, 50).rotateBy(-2, 50).rotateBy(2, 50).rotateBy(-2, 50)
+                    .rotateBy(1, 50).rotateBy(-1, 50).rotateBy(1, 50).rotateBy(-1, 50)
+                    .rotateBy(1, 50).rotateBy(-1, 50).rotateBy(1, 50).rotateBy(-1, 50)
+                    .play();
+        
+                    copyCard2.ui.tweener
+                    .to({x: self.gridX.center(3), alpha: 0.6}, 1000, "easeInOutBack")
+                    .to({x: self.gridX.center(1), alpha: 0.4}, 1000, "easeInOutBack")
+                    .to({x: self.gridX.center(), alpha: 0.2}, 1000, "easeInOutBack")
+                    .rotateBy(-4, 50).rotateBy(4, 50).rotateBy(-4, 50).rotateBy(4, 50)
+                    .rotateBy(-4, 50).rotateBy(4, 50).rotateBy(-4, 50).rotateBy(4, 50)
+                    .rotateBy(-3, 50).rotateBy(3, 50).rotateBy(-3, 50).rotateBy(3, 50)
+                    .rotateBy(-3, 50).rotateBy(3, 50).rotateBy(-3, 50).rotateBy(3, 50)
+                    .rotateBy(-2, 50).rotateBy(2, 50).rotateBy(-2, 50).rotateBy(2, 50)
+                    .rotateBy(-2, 50).rotateBy(2, 50).rotateBy(-2, 50).rotateBy(2, 50)
+                    .rotateBy(-1, 50).rotateBy(1, 50).rotateBy(-1, 50).rotateBy(1, 50)
+                    .rotateBy(-1, 50).rotateBy(1, 50).rotateBy(-1, 50).rotateBy(1, 50)
+                    .play();
+                });
+            }
+
+            commonEffect().then(function() {
+                effect.remove();
+
+                const newCardID = getNewCardID(copyCard1.id, copyCard2.id);
+
+                if (!newCardID) {
+                    copyCard1.ui.tweener.to({alpha:1, x:self.gridX.center(-4)}, 100).play();
+                    copyCard2.ui.tweener.to({alpha:1, x:self.gridX.center(+4)}, 100).play();
+                    Label({text:"「ダメだったか」", fontSize: 30, fill:"white"})
+                    .addChildTo(self).setPosition(self.gridX.center(), self.gridY.center(5));
+                } else {
+                    copyCard1.ui.remove();
+                    copyCard2.ui.remove();
+                    const newCard = new Card(newCardID, true);
+                    newCard.ui.addChildTo(self).setPosition(self.gridX.center(), self.gridY.center(-2));
+                    Label({text:"「よし、成功だ」", fontSize: 30, fill:"white"})
+                    .addChildTo(self).setPosition(self.gridX.center(), self.gridY.center(5));
+
+                    myCards.add(new Card(newCardID));
+                    myCards.remove(selectCard1);
+                    myCards.remove(selectCard2);
+                }
+
+                player.stone -= 2;
+
+                self.on("pointstart", function() {
+                    self.exit("MainScene");
+                });
+
+            });
+        });
+
+        function getNewCardID(cardID1, cardID2) {
+            for (let i = 0; i < cardEvolutionRules.length; i++) {
+                const rule = cardEvolutionRules[i];
+                if ((rule.in1 === cardID1 && rule.in2 === cardID2) || (rule.in1 === cardID2 && rule.in2 === cardID1)) {
+                    return rule.out;
+                }
+            }
+            return null;
+        }
+
+
+
+        const closeButton = new BasicButton({
+            width: 120,
+            height: 50,
+            text: "Cancel",
+            dark: true,
+        });
+        closeButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(6));
+        closeButton.ui.on("pointstart", function() {
+            self.exit("MainScene");
+        });
+
+    },
+});
+
+const cardEvolutionRules = [
+    {
+        in1: "02",
+        in2: "02",
+        out: "09",
+    }
+];
 function Cards() {
     const self = this;
 
@@ -1679,6 +1897,7 @@ function Cards() {
 
     self.createNewCards = function() {
         self.add(new Card("01"));
+        self.add(new Card("06"));
         self.add(new Card("02"));
         self.add(new Card("03"));
         self.add(new Card("04"));
@@ -1710,9 +1929,19 @@ function Cards() {
         return list.length;
     };
 
+    self.remove = function(targetCard) {
+        const index = list.findIndex(function(card) {
+            return card === targetCard;
+        });
+
+        if (index < 0) return;
+
+        list.splice(index, 1);
+    };
+
 }phina.define('CardsListScene', {
     superClass: 'DisplayScene',
-    init: function(param/*{cards: Cards}*/) {
+    init: function(param/*{cards: Cards, button1: function, disableCards:[card]}*/) {
         this.superInit(param);
 
         const self = this;
@@ -1722,7 +1951,13 @@ function Cards() {
         self.backgroundColor = "black";
 
         for (let i = 0; i < cards.list.length; i++) {
-            cards.list[i].ui.show();
+            if (param.disableCards && param.disableCards.some(function(card) {
+                return cards.list[i] === card;
+            })) {
+                cards.list[i].ui.hide();
+            } else {
+                cards.list[i].ui.show();
+            }
         }
     
         const cardListArea = RectangleShape({
@@ -1766,14 +2001,29 @@ function Cards() {
 
             cards.list[i].ui.clear("pointend");
             cards.list[i].ui.on("pointend", function(e) {
+
+                if (param.disableCards && param.disableCards.some(function(card) {
+                    return cards.list[i] === card;
+                })) {
+                    return;
+                }
+    
                 // Y座標が同じなら、タップしたと判定
                 if (pointStartDy !== e.pointer.y) {
                     return;
                 }
-                App.pushScene(CardDetailScene({cardID: cards.list[i].id}));
+                App.pushScene(CardDetailScene({card: cards.list[i], cardID: cards.list[i].id, button1: param.button1, returnObj: returnObj}));
             });
 
         }
+
+        const returnObj = {};
+
+        this.on("resume", function() {
+            if (returnObj.tobeExit) {
+                self.exit();
+            }
+        });
 
         const buttonArea = RectangleShape({
             width: this.width,
@@ -1861,6 +2111,8 @@ function CardsUI(cards /* Cards */) {
         cardNumLabel.text = self.count();
     }
 
+    refreshCardNumLabel();
+
 }function Enemy(id) {
     const self = this;
 
@@ -1947,6 +2199,71 @@ function CardsUI(cards /* Cards */) {
             break;
     }
 }
+phina.define('GetItemScene', {
+    superClass: 'DisplayScene',
+    init: function(param/*{items}*/) {
+        this.superInit(param);
+
+        const self = this;
+
+        self.backgroundColor = "black";
+
+        // アイテム無しならスルー
+        if (!param.items) {
+            setTimeout(function() {
+                self.exit("MainScene");
+            }, 10);
+            return;
+        }
+
+        Label({
+            text: "アイテムを拾った",
+            fontSize: 30,
+            fill: "white",
+        }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(-5));
+
+        if (param.items.stone) {
+            Label({
+                text: "魔石 " + param.items.stone + " 個",
+                fontSize: 50,
+                fill: "white",
+            }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(-3));
+            player.stone += param.items.stone;
+        }
+
+        if (param.items.card) {
+            Label({
+                text: "＆",
+                fontSize: 30,
+                fill: "white",
+            }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(-1.7));
+
+            const card = new Card(param.items.card);
+            card.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(1));
+            card.ui.setInteractive(true);
+            card.ui.on("pointstart", function() {
+                App.pushScene(CardDetailScene({
+                    cardID: card.id,
+                }));
+            });
+            myCards.add(card);
+
+        }
+
+        const closeButton = new BasicButton({
+            width: 120,
+            height: 50,
+            text: "OK",
+            dark: true,
+        });
+        closeButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(5));
+        closeButton.ui.on("pointstart", function() {
+            self.exit("MainScene");
+        });
+
+    },
+});
+
 phina.define('IntroScene', {
     superClass: 'DisplayScene',
     init: function(param/*{callback: function}*/) {
@@ -1957,7 +2274,7 @@ phina.define('IntroScene', {
         this.backgroundColor = "black";
 
         LabelArea({
-            width: this.width - 50,
+            width: this.width - 100,
             text: "ダンジョンの入り口まで来た。\n\n武器は持ってこなかった。碁盤と碁石だけ持ってきた。\n\n生きて戻れるだろうか？",
             fontSize: 30,
             fill: "white",
@@ -1993,6 +2310,56 @@ phina.define('MainScene', {
         }
         Sprite(backImg).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
 
+        // 情報表示
+        LabelArea({
+            width: 200,
+            height: 80,
+            text: nowMap.floor,
+            fontSize: 30,
+            fill: "white",
+            align: "right",
+        }).addChildTo(this).setPosition(this.gridX.span(13), this.gridY.span(1));
+        LabelArea({
+            width: 200,
+            height: 80,
+            text: "ＨＰ: " + player.hp,
+            fontSize: 30,
+            fill: "white",
+        }).addChildTo(this).setPosition(this.gridX.span(3), this.gridY.span(1));
+        LabelArea({
+            width: 200,
+            height: 80,
+            text: "魔石: " + player.stone,
+            fontSize: 30,
+            fill: "white",
+        }).addChildTo(this).setPosition(this.gridX.span(3), this.gridY.span(1.7));
+
+        // カード合成ボタン
+        const cardButton = RectangleShape({
+            width: 80,
+            height: 60,
+            fill: "rgba(0,0,0,0.8)",
+            stroke: "white",
+            strokeWidth: 1,
+            cornerRadius: 5,
+        }).addChildTo(this).setPosition(this.gridX.span(2), this.gridY.span(4.4));
+        Label({
+            text: "カード\n合成",
+            fill: "white",
+            fontSize: 18,
+        }).addChildTo(cardButton);
+        cardButton.setInteractive(true);
+        cardButton.on("pointstart", function() {
+            if (player.stone < 2) {
+                return;
+            }
+            self.exit("CardPlusScene");
+        });
+
+        // 山札
+        const stock = new CardsUI(myCards);
+        stock.ui.addChildTo(this).setPosition(this.gridX.span(2), this.gridY.span(2.7));
+
         // フェード用のシェイプ
         const fade = RectangleShape({
             width: this.width,
@@ -2014,14 +2381,17 @@ phina.define('MainScene', {
             });
             goButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(5));
             goButton.ui.on("pointstart", function() {
+                mapIndex += 1;
                 if (nowMap.enemy) {
                     const enemy = new Enemy(nowMap.enemy);
-                    self.exit("BattleScene", {player: player, enemy: enemy});
-                    mapIndex += 1;
-                } else {
-                    // TODO
-                    // 敵がいない場合の処理
+                    self.exit("BattleScene", {player: player, enemy: enemy, items: nowMap.items});
+                    return;
                 }
+                // フェードアウト
+                fade.tweener.to({alpha: 1}, 1000)
+                .call(function() {
+                    App.replaceScene(MainScene());
+                }).play();
             });
         }
 
@@ -2036,10 +2406,10 @@ phina.define('MainScene', {
             });
             goButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(5));
             goButton.ui.on("pointstart", function() {
+                mapIndex += 1;
                 // フェードアウト
                 fade.tweener.to({alpha: 1}, 1000)
                 .call(function() {
-                    mapIndex += 1;
                     App.replaceScene(MainScene());
                 }).play();
             });
@@ -2054,22 +2424,30 @@ const map = [
         floor: "地下１階",
         type: 1,
         enemy: "01",
+        items: {stone:1},
     },{
         floor: "地下１階",
         type: 1,
         enemy: "02",
+        items: {stone:1, card: "01"},
     },{
         floor: "地下１階",
         type: 1,
         enemy: "01",
+        items: {stone:1},
     },{
-        floor: "地下２階",
+        floor: "地下１階",
+        type: 1,
+        enemy: null,
+    },{
+        floor: "地下１階",
         type: 2,
         enemy: null,
     },{
         floor: "地下２階",
         type: 1,
         enemy: "03",
+        items: {stone:1},
     }
 ];
 function Player() {
@@ -2078,6 +2456,7 @@ function Player() {
     self.hp = 10;
     self.defense = 0;
     self.defaultDefense = 0;
+    self.stone = 1;
 
     // 自分のターンになったら呼ぶ
     self.turnBegin = function() {
@@ -2445,6 +2824,7 @@ phina.define('TitleScene', {
 
         this.on("pointstart", function() {
             self.exit("");
+            // self.exit("GetItemScene", {items:{stone:2, card:"06"}});
         });
 
     },
