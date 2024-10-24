@@ -13,7 +13,6 @@ let waiting = false;
 const ASSETS = {
     image: {
         "stock": "img/stock.png",
-        "monster-01": "img/monster-01.png",
         "fire": "img/fire.png",
         "card-kiri": "img/card-kiri.png",
         "card-bear": "img/card-bear.png",
@@ -35,14 +34,24 @@ const ASSETS = {
         "monster05": "img/monster05.png",
         "monster06": "img/monster06.png",
         "back01": "img/back01.png",
+        "dungeon01": "img/dungeon01.png",
+        "dungeon02": "img/dungeon02.png",
     }
 };
 
 phina.main(function() {
     App = GameApp({
         assets: ASSETS,
-        startLabel: 'MainScene',
+        startLabel: 'TitleScene',
         scenes: [
+            {
+                label: 'TitleScene',
+                className: 'TitleScene',
+            },
+            {
+                label: 'IntroScene',
+                className: 'IntroScene',
+            },
             {
                 label: 'MainScene',
                 className: 'MainScene',
@@ -434,10 +443,10 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         self.backgroundColor = "gray";
 
         // 背景画像
-        Sprite("back01").addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+        Sprite("dungeon01").addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
 
         // 敵画像
-        const enemyImage = Sprite(param.enemy.img).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+        const enemyImage = Sprite(param.enemy.img).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center()).setScale(0);
 
         // 自ステータス
         self.myStatusBox = RectangleShape({
@@ -448,9 +457,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         }).addChildTo(this).setPosition(this.gridX.span(-2), this.gridY.center(-2));
         Label({text: "You", fontSize: 20, fontWeight:800, fill: "white"}).addChildTo(self.myStatusBox).setPosition(0, -80);
         const myDefenseImg = Sprite("defense").addChildTo(self.myStatusBox).setPosition(0, -25);
-        const myDefenseLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(myDefenseImg);
+        const myDefenseLabel = Label({text:"", fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(myDefenseImg);
         const myLifeImg = Sprite("life").addChildTo(self.myStatusBox).setPosition(0, 50);
-        const myLifeLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(myLifeImg);
+        const myLifeLabel = Label({text:"", fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(myLifeImg);
 
         // 自ステータス再描画
         function refreshMyStatusBox() {
@@ -1104,7 +1113,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
         // ターン終了ボタン
         const turnEndButton = new BasicButton({text: "TURN END", width: 300, height: 70, dark: true});
-        turnEndButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.span(17))
+        turnEndButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.span(15))
         .setInteractive(true)
         .on("pointstart", function() {
 
@@ -1112,12 +1121,15 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
             endOfMyTurn();
 
-        });
+        })
+        .hide();
 
         // 自分のターン終了
         function endOfMyTurn() {
 
             waiting = true;
+
+            turnEndButton.ui.hide();
 
             // 場札の１番目の処理が終わってから
             playLayoutCard(0).then(function () {
@@ -1215,6 +1227,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                 dealCards().then(function() {
                     self.layoutBox1.show();
                     self.layoutBox2.show();
+                    turnEndButton.ui.show();
                     waiting = false;
                 });
             });
@@ -1285,19 +1298,22 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // ゲーム開始前の準備
         function setup() {
             return Flow(function(resolve) {
-                self.myStatusBox.tweener
-                    .wait(1000)
+                enemyImage.tweener.to({scaleX:1, scaleY:1}, 500, "easeInExpo")
+                .call(function() {
+                    self.myStatusBox.tweener
+                    .wait(500)
                     .to({x: self.gridX.span(2)}, 200)
                     .call(function() {
                         stock.ui.tweener.to({x:self.gridX.center(6)}, 200).play();
                         discard.ui.tweener.to({x:self.gridX.center(-6)}, 200).play();
-                        turnEndButton.ui.tweener.to({y:self.gridY.span(15)}, 200).play();
                     })
                     .wait(500)
                     .call(function() {
                         resolve();
                     })
                     .play();
+                })
+                .play();
             });
         }
     
@@ -1639,7 +1655,7 @@ function Cards() {
 
         const cards = param.cards;
 
-        self.backgroundColor = "DimGray";
+        self.backgroundColor = "black";
 
         for (let i = 0; i < cards.list.length; i++) {
             cards.list[i].ui.show();
@@ -1648,7 +1664,7 @@ function Cards() {
         const cardListArea = RectangleShape({
             width: this.width,
             height: this.gridY.unitWidth * 14,
-            fill: "DimGray",
+            fill: "black",
             strokeWidth: 0,
         }).addChildTo(self).setOrigin(0,0).setPosition(-5,-5);
 
@@ -1696,7 +1712,7 @@ function Cards() {
         const buttonArea = RectangleShape({
             width: this.width,
             height: this.gridY.unitWidth * 2,
-            fill: "black",
+            fill: "DimGray",
             strokeWidth: 0,
         }).addChildTo(self).setPosition(this.gridX.center(), this.gridY.span(15));
 
@@ -1804,10 +1820,30 @@ function CardsUI(cards /* Cards */) {
     // 敵ステータス決定
     switch (id) {
         case "01":
-            self.hp = 3;
-            self.defense = 1;
+            self.hp = 4;
+            self.defense = 0;
             self.defaultDefense = 0;
-            self.img = "monster04";
+            self.img = "monster01";
+            self.actions = [
+                [{
+                    name: "attack",
+                    point: 1,
+                }],
+                [{
+                    name: "life",
+                    point: 1,
+                }],
+                [{
+                    name: "attack",
+                    point: 1,
+                }],
+            ];
+            break;
+        case "02":
+            self.hp = 3;
+            self.defense = 0;
+            self.defaultDefense = 0;
+            self.img = "monster02";
             self.actions = [
                 [{
                     name: "attack",
@@ -1819,14 +1855,27 @@ function CardsUI(cards /* Cards */) {
                 },{
                     name: "defense",
                     point: 1,
-                },{
-                    name: "life",
-                    point: 1,
                 }],
                 [{
                     name: "life",
                     point: 2,
                 }]
+            ];
+            break;
+        case "03":
+            self.hp = 2;
+            self.defense = 5;
+            self.defaultDefense = 0;
+            self.img = "monster03";
+            self.actions = [
+                [{
+                    name: "defense",
+                    point: 2,
+                }],
+                [{
+                    name: "attack",
+                    point: 1,
+                }],
             ];
             break;
     }
@@ -1855,33 +1904,31 @@ phina.define('GameOverScene', {
 
     },
 });
-phina.define('GameWinScene', {
+phina.define('IntroScene', {
     superClass: 'DisplayScene',
     init: function(param/*{callback: function}*/) {
         this.superInit(param);
 
         const self = this;
 
-        this.backgroundColor = "rgba(255,255,255,0.1)";
+        this.backgroundColor = "black";
 
-        Label({
-            text: "WIN",
-            fontSize: 150,
-            fontWeight: 800,
-            fill: "darkblue",
-            stroke: "white",
-            strokeWidth: 20,
+        LabelArea({
+            width: this.width - 50,
+            text: "ダンジョンの入り口まで来た。\n\n武器は持ってこなかった。碁盤と碁石だけ持ってきた。\n\n生きて戻れるだろうか？",
+            fontSize: 30,
+            fill: "white",
         }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
 
         this.on("pointstart", function() {
-            setTimeout(function() {
-                param.callback();
-            }, 10)
-            self.exit();
+            self.exit("MainScene");
         });
 
     },
 });
+const player = new Player();
+let mapIndex = 0;
+
 phina.define('MainScene', {
     superClass: 'DisplayScene',
     init: function(param/*{}*/) {
@@ -1889,27 +1936,96 @@ phina.define('MainScene', {
 
         const self = this;
 
-        const player = new Player();
+        const nowMap = map[mapIndex];
 
-        const goNext = function() {
-            const enemy = new Enemy("01");
+        // 背景を描画
+        let backImg;
+        if (nowMap.type === 1) {
+            backImg = "dungeon01";
+        } else if (nowMap.type === 2) {
+            backImg = "dungeon02";
+        }
+        Sprite(backImg).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
 
-            self.exit("BattleScene", {player: player, enemy: enemy});
-        };
+        // フェード用のシェイプ
+        const fade = RectangleShape({
+            width: this.width,
+            height: this.height,
+            fill: "black",
+        }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
 
-        // 先へ進むボタン 
-        const goButton = new BasicButton({
-            width: 100,
-            height: 80,
-            text: "進む",
-        });
-        goButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
+        // フェードイン
+        fade.tweener.to({alpha: 0}, 500).play();
 
-        goButton.ui.on("pointstart", function() {
-            goNext();
-        });
+        // 通路
+        if (nowMap.type === 1) {
+            // 先へ進むボタン 
+            const goButton = new BasicButton({
+                width: 200,
+                height: 50,
+                text: "奥へ進む",
+                dark: true,
+            });
+            goButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(5));
+            goButton.ui.on("pointstart", function() {
+                if (nowMap.enemy) {
+                    const enemy = new Enemy(nowMap.enemy);
+                    self.exit("BattleScene", {player: player, enemy: enemy});
+                    mapIndex += 1;
+                } else {
+                    // TODO
+                    // 敵がいない場合の処理
+                }
+            });
+        }
+
+        // 階段
+        if (nowMap.type === 2) {
+            // 先へ進むボタン 
+            const goButton = new BasicButton({
+                width: 200,
+                height: 50,
+                text: "階段を下りる",
+                dark: true,
+            });
+            goButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(5));
+            goButton.ui.on("pointstart", function() {
+                // フェードアウト
+                fade.tweener.to({alpha: 1}, 1000)
+                .call(function() {
+                    mapIndex += 1;
+                    App.replaceScene(MainScene());
+                }).play();
+            });
+        }
+
     },
 });
+
+// type 1:通路 2:階段
+const map = [
+    {
+        floor: "地下１階",
+        type: 1,
+        enemy: "01",
+    },{
+        floor: "地下１階",
+        type: 1,
+        enemy: "02",
+    },{
+        floor: "地下１階",
+        type: 1,
+        enemy: "01",
+    },{
+        floor: "地下２階",
+        type: 2,
+        enemy: null,
+    },{
+        floor: "地下２階",
+        type: 1,
+        enemy: "03",
+    }
+];
 function Player() {
     const self = this;
 
@@ -2252,4 +2368,33 @@ phina.define('Scrollable', {
             
         }
     }
+});
+phina.define('TitleScene', {
+    superClass: 'DisplayScene',
+    init: function(param/*{callback: function}*/) {
+        this.superInit(param);
+
+        const self = this;
+
+        this.backgroundColor = "black";
+
+        Label({
+            text: "囲碁用語ダンジョン",
+            fontSize: 60,
+            fontWeight: 800,
+            fill: "white",
+        }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(-3));
+
+        Label({
+            text: "TAP TO START",
+            fontSize: 30,
+            fontWeight: 800,
+            fill: "white",
+        }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(3));
+
+        this.on("pointstart", function() {
+            self.exit("");
+        });
+
+    },
 });
