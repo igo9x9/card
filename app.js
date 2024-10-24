@@ -447,6 +447,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
 
         // 敵画像
         const enemyImage = Sprite(param.enemy.img).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center()).setScale(0);
+        enemyImage.alpha = 0;
 
         // 自ステータス
         self.myStatusBox = RectangleShape({
@@ -1298,7 +1299,9 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // ゲーム開始前の準備
         function setup() {
             return Flow(function(resolve) {
-                enemyImage.tweener.to({scaleX:1, scaleY:1}, 500, "easeInExpo")
+                enemyImage.tweener
+                .wait(200)
+                .to({scaleX:1, scaleY:1, alpha: 1}, 500, "easeInExpo")
                 .call(function() {
                     self.myStatusBox.tweener
                     .wait(500)
