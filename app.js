@@ -7,6 +7,15 @@ const version = "1.0";
 // 場札（layout）
 // 捨て札（discard）
 
+let mapIndex = 0;
+
+// プレーヤー
+let player;
+
+// デッキ
+let myCards;
+
+
 // ユーザの操作を抑止したい間はtrueにする
 let waiting = false;
 
@@ -599,8 +608,6 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         self.handsLayer = DisplayElement().addChildTo(self).setPosition(this.gridX.center(), this.gridY.center(4.2));
 
         // 山札の山
-        const myCards = new Cards();
-        myCards.createNewCards();
         const stock = new CardsUI(myCards);
         stock.ui.addChildTo(this).setPosition(this.gridX.center(10), this.gridY.center(1));
 
@@ -1000,6 +1007,33 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
             .play();
         }
 
+        // 手札、場札、捨て札の３か所のカードを山札に戻す
+        // アニメーションなし
+        function returnAllCards() {
+
+            // 手札のすべてを捨て札の山へ
+            for (let i = 0; i < 4; i++) {
+                if (cards[i]) {
+                    cards[i].status === "hand" && discard.add(cards[i]);
+                }
+            }
+
+            // 場札を捨て札の山へ
+            for (let i = 0; i < 2; i++) {
+                if (self.layoutCards[i]) {
+                    discard.add(self.layoutCards[i]);
+                }
+            }
+
+            // 捨て札
+            let max = discard.count();
+            for (let i = 0; i < max; i++) {
+                const card = discard.deal();      
+                card.reset();
+                stock.add(card);
+            }
+        }
+
         // 捨て札の山から山札にカードを戻す
         function returnCardToStockFromDiscard(resolve) {
             function returnCard(isLastCard/* 最後のカード？ */) {
@@ -1193,6 +1227,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
                         fadeOut.alpha = 0;
                         fadeOut.tweener.to({alpha:1}, 1000)
                         .call(function() {
+                            returnAllCards();
                             self.exit("MainScene");
                         })
                         .play();
@@ -1206,8 +1241,31 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         // GameOver確認
         function isGameOver() {
             if (param.player.hp === 0) {
-                App.pushScene(GameOverScene());
-                waiting = false;
+                returnAllCards();
+                waiting = true;
+
+                const fade = RectangleShape({
+                    width: self.width,
+                    height: self.height,
+                    fill: "darkred",
+                }).addChildTo(self).setPosition(self.gridX.center(), self.gridY.center());
+                fade.alpha = 0.1;
+                Label({
+                    text: "GAME\nOVER",
+                    fontSize: 150,
+                    fontWeight: 800,
+                    fill: "darkred",
+                    stroke: "white",
+                    strokeWidth: 20,
+                }).addChildTo(self).setPosition(self.gridX.center(), self.gridY.center());
+        
+                self.on("pointstart", function() {
+                    self.exit("TitleScene");
+                    waiting = false;
+                });
+        
+                fade.tweener.to({alpha: 0.8}, 5000);
+
                 return true;
             }
             return false;
@@ -1246,6 +1304,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
             for (let i = 0; i < 2; i++) {
                 const targetCard = self.layoutCards[i];
                 if (targetCard) {
+                    targetCard.reset();
                     moveCardToDiscard(targetCard);
                     self.layoutCards[i] = null;
                 }
@@ -1322,9 +1381,11 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
     
         // ゲーム開始
         waiting = true;
-        setup().then(function() {
-            startMyTurn();
-        });
+        setTimeout(function() {
+            setup().then(function() {
+                startMyTurn();
+            });
+        }, 10);
         
 
     },
@@ -1698,10 +1759,12 @@ function Cards() {
 
             let pointStartDy;
 
+            cards.list[i].ui.clear("pointstart");
             cards.list[i].ui.on("pointstart", function(e) {
                 pointStartDy = e.pointer.y;
             });
 
+            cards.list[i].ui.clear("pointend");
             cards.list[i].ui.on("pointend", function(e) {
                 // Y座標が同じなら、タップしたと判定
                 if (pointStartDy !== e.pointer.y) {
@@ -1725,6 +1788,7 @@ function Cards() {
             text: "閉じる",
         });
         closeButton.ui.addChildTo(buttonArea).setPosition(0, 0);
+        closeButton.ui.clear("pointstart");
         closeButton.ui.on("pointstart", function() {
             // いろいろ元にもどす
             for (let i = 0; i < cards.list.length; i++) {
@@ -1883,30 +1947,6 @@ function CardsUI(cards /* Cards */) {
             break;
     }
 }
-phina.define('GameOverScene', {
-    superClass: 'DisplayScene',
-    init: function(param/*{}*/) {
-        this.superInit(param);
-
-        const self = this;
-
-        this.backgroundColor = "rgba(100,0,0,0.1)";
-
-        Label({
-            text: "GAME\nOVER",
-            fontSize: 150,
-            fontWeight: 800,
-            fill: "darkred",
-            stroke: "white",
-            strokeWidth: 20,
-        }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center());
-
-        this.on("pointstart", function() {
-            self.exit();
-        });
-
-    },
-});
 phina.define('IntroScene', {
     superClass: 'DisplayScene',
     init: function(param/*{callback: function}*/) {
@@ -1929,9 +1969,6 @@ phina.define('IntroScene', {
 
     },
 });
-const player = new Player();
-let mapIndex = 0;
-
 phina.define('MainScene', {
     superClass: 'DisplayScene',
     init: function(param/*{}*/) {
@@ -1940,6 +1977,12 @@ phina.define('MainScene', {
         const self = this;
 
         const nowMap = map[mapIndex];
+
+        // まだデッキを生成していないなら生成
+        if (myCards.count() === 0) {
+            // デッキ生成
+            myCards.createNewCards();
+        }
 
         // 背景を描画
         let backImg;
@@ -2380,6 +2423,11 @@ phina.define('TitleScene', {
         const self = this;
 
         this.backgroundColor = "black";
+
+        // 初期化
+        player = new Player();
+        myCards = new Cards();
+        mapIndex = 0;
 
         Label({
             text: "囲碁用語ダンジョン",
