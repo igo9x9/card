@@ -47,6 +47,7 @@ const ASSETS = {
         "dungeon01": "img/dungeon01.png",
         "dungeon02": "img/dungeon02.png",
         "effect1": "img/effect1.png",
+        "close": "img/close.png",
     }
 };
 
@@ -618,6 +619,7 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         self.handsLayer = DisplayElement().addChildTo(self).setPosition(this.gridX.center(), this.gridY.center(4.2));
 
         // 山札の山
+        myCards.shuffle();
         const stock = new CardsUI(myCards);
         stock.ui.addChildTo(this).setPosition(this.gridX.center(10), this.gridY.center(1));
 
@@ -1647,7 +1649,7 @@ phina.define('CardDetailScene', {
         const dialog = RectangleShape({
             width: 500,
             height: height,
-            fill: "DimGray",
+            fill: "black",
             stroke: "black",
             strokeWidth: 5,
             cornerRadius: 5,
@@ -1663,7 +1665,7 @@ phina.define('CardDetailScene', {
                 width: 200,
                 height: 50,
                 text: param.button1.text,
-                primary: true,
+                dark: true,
             });
             button1.ui.addChildTo(this).setPosition(this.gridX.center(), button1Y);
             button1.ui.setInteractive(true);
@@ -1677,14 +1679,11 @@ phina.define('CardDetailScene', {
         }
 
         // closeボタン
-        const closeButton = new BasicButton({
-            width: 200,
-            height: 50,
-            text: "閉じる",
-        });
-        closeButton.ui.addChildTo(this).setPosition(this.gridX.center(), closeButtonY);
-        closeButton.ui.setInteractive(true);
-        closeButton.ui.on("pointstart", function() {
+        const closeButton = Sprite("close");
+        closeButton.addChildTo(this).setPosition(this.gridX.center(), closeButtonY);
+        closeButton.clear("pointstart");
+        closeButton.setInteractive(true);
+        closeButton.on("pointstart", function() {
             self.exit();
         });
     },
@@ -1783,7 +1782,7 @@ phina.define('CardPlusScene', {
             }
 
             okButton.ui.hide();
-            closeButton.ui.hide();
+            closeButton.hide();
 
             self.layoutBox1.remove();
             self.layoutBox2.remove();
@@ -1832,7 +1831,7 @@ phina.define('CardPlusScene', {
                 if (!newCardID) {
                     copyCard1.ui.tweener.to({alpha:1, x:self.gridX.center(-4)}, 100).play();
                     copyCard2.ui.tweener.to({alpha:1, x:self.gridX.center(+4)}, 100).play();
-                    Label({text:"「ダメだったか」", fontSize: 30, fill:"white"})
+                    Label({text:"「ダメか」", fontSize: 30, fill:"white"})
                     .addChildTo(self).setPosition(self.gridX.center(), self.gridY.center(5));
                 } else {
                     copyCard1.ui.remove();
@@ -1868,14 +1867,11 @@ phina.define('CardPlusScene', {
 
 
 
-        const closeButton = new BasicButton({
-            width: 120,
-            height: 50,
-            text: "Cancel",
-            dark: true,
-        });
-        closeButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(6));
-        closeButton.ui.on("pointstart", function() {
+        const closeButton = Sprite("close");
+        closeButton.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(6));
+        closeButton.clear("pointstart");
+        closeButton.setInteractive(true);
+        closeButton.on("pointstart", function() {
             self.exit("MainScene");
         });
 
@@ -1919,6 +1915,8 @@ function Cards() {
         self.add(new Card("04"));
         self.add(new Card("05"));
         self.add(new Card("06"));
+
+        self.shuffle();
     };
 
     self.add = function(card) {
@@ -1937,6 +1935,10 @@ function Cards() {
         if (index < 0) return;
 
         list.splice(index, 1);
+    };
+
+    self.shuffle = function() {
+        list.sort(() => Math.random() - 0.5);
     };
 
 }phina.define('CardsListScene', {
@@ -1962,7 +1964,8 @@ function Cards() {
     
         const cardListArea = RectangleShape({
             width: this.width,
-            height: this.gridY.unitWidth * 14,
+            // height: this.gridY.unitWidth * 14,
+            height: this.height,
             fill: "black",
             strokeWidth: 0,
         }).addChildTo(self).setOrigin(0,0).setPosition(-5,-5);
@@ -2025,21 +2028,11 @@ function Cards() {
             }
         });
 
-        const buttonArea = RectangleShape({
-            width: this.width,
-            height: this.gridY.unitWidth * 2,
-            fill: "DimGray",
-            strokeWidth: 0,
-        }).addChildTo(self).setPosition(this.gridX.center(), this.gridY.span(15));
-
-        const closeButton = new BasicButton({
-            width: 200,
-            height: 50,
-            text: "閉じる",
-        });
-        closeButton.ui.addChildTo(buttonArea).setPosition(0, 0);
-        closeButton.ui.clear("pointstart");
-        closeButton.ui.on("pointstart", function() {
+        const closeButton = Sprite("close");
+        closeButton.addChildTo(this).setPosition(this.gridX.center(), this.gridY.span(15));
+        closeButton.clear("pointstart");
+        closeButton.setInteractive(true);
+        closeButton.on("pointstart", function() {
             // いろいろ元にもどす
             for (let i = 0; i < cards.list.length; i++) {
                 cards.list[i].ui.hide();
@@ -2250,14 +2243,11 @@ phina.define('GetItemScene', {
 
         }
 
-        const closeButton = new BasicButton({
-            width: 120,
-            height: 50,
-            text: "OK",
-            dark: true,
-        });
-        closeButton.ui.addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(5));
-        closeButton.ui.on("pointstart", function() {
+        const closeButton = Sprite("close");
+        closeButton.addChildTo(this).setPosition(this.gridX.center(), this.gridY.span(13));
+        closeButton.clear("pointstart");
+        closeButton.setInteractive(true);
+        closeButton.on("pointstart", function() {
             self.exit("MainScene");
         });
 
@@ -2335,26 +2325,25 @@ phina.define('MainScene', {
         }).addChildTo(this).setPosition(this.gridX.span(3), this.gridY.span(1.7));
 
         // カード合成ボタン
-        const cardButton = RectangleShape({
-            width: 80,
-            height: 60,
-            fill: "rgba(0,0,0,0.8)",
-            stroke: "white",
-            strokeWidth: 1,
-            cornerRadius: 5,
-        }).addChildTo(this).setPosition(this.gridX.span(2), this.gridY.span(4.4));
-        Label({
-            text: "カード\n合成",
-            fill: "white",
-            fontSize: 18,
-        }).addChildTo(cardButton);
-        cardButton.setInteractive(true);
-        cardButton.on("pointstart", function() {
-            if (player.stone < 2) {
-                return;
-            }
-            self.exit("CardPlusScene");
-        });
+        if (player.stone >= 2) {
+            const cardButton = RectangleShape({
+                width: 80,
+                height: 60,
+                fill: "rgba(0,0,0,0.8)",
+                stroke: "white",
+                strokeWidth: 1,
+                cornerRadius: 5,
+            }).addChildTo(this).setPosition(this.gridX.span(2), this.gridY.span(4.4));
+            Label({
+                text: "カード\n合成",
+                fill: "white",
+                fontSize: 18,
+            }).addChildTo(cardButton);
+            cardButton.setInteractive(true);
+            cardButton.on("pointstart", function() {
+                self.exit("CardPlusScene");
+            });
+        }
 
         // 山札
         const stock = new CardsUI(myCards);
@@ -2456,7 +2445,7 @@ function Player() {
     self.hp = 10;
     self.defense = 0;
     self.defaultDefense = 0;
-    self.stone = 1;
+    self.stone = 2;
 
     // 自分のターンになったら呼ぶ
     self.turnBegin = function() {
