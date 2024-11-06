@@ -3498,14 +3498,14 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
                     name: "attack",
                     point: 1,
                 },{
-                    name: "defense",
-                    point: 2,
+                    name: "life",
+                    point: 1,
                 }],
                 [{
                     name: "attack",
                     point: 2,
                 },{
-                    name: "defense",
+                    name: "life",
                     point: 2,
                 }],
                 [{
@@ -3513,14 +3513,11 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
                     point: 3,
                 },{
                     name: "life",
-                    point: 2,
+                    point: 3,
                 }],
                 [{
                     name: "attack",
                     point: 4,
-                },{
-                    name: "defense",
-                    point: 2,
                 }],
                 [{
                     name: "attack",
@@ -3712,7 +3709,7 @@ phina.define('MainScene', {
         }).addChildTo(this).setPosition(this.gridX.span(3), this.gridY.span(1.7));
 
         // カード合成ボタン
-        if (player.stone >= 1) {
+        if (player.stone >= 1 && nowMap.type !== 10) {
             const cardButton = RectangleShape({
                 width: 80,
                 height: 60,
@@ -3752,9 +3749,11 @@ phina.define('MainScene', {
 
         }
 
-        // 山札
-        const stock = new CardsUI(myCards);
-        stock.ui.addChildTo(this).setPosition(this.gridX.span(2), this.gridY.span(2.7));
+        if (nowMap.type !== 10) {
+            // 山札
+            const stock = new CardsUI(myCards);
+            stock.ui.addChildTo(this).setPosition(this.gridX.span(2), this.gridY.span(2.7));
+        }
 
         function fade(kind, callback) {
             // フェード用のシェイプ
@@ -3869,6 +3868,7 @@ phina.define('MainScene', {
 
         // エンディング
         if (nowMap.type === 10) {
+
             const label = Label({
                 fill: "white",
                 fontSize: 150,
@@ -3877,6 +3877,15 @@ phina.define('MainScene', {
                 stroke: "black",
                 strokeWidth: 2,
             }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(-1));
+
+            Label({
+                fill: "white",
+                fontSize: 30,
+                text: "最後まで遊んでいただき\nありがとうございました。",
+                fontWeight: 800,
+                stroke: "black",
+                strokeWidth: 2,
+            }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(4));
 
             this.on("pointstart", function() {
                 self.exit("ResultScene");
