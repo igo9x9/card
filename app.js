@@ -2670,6 +2670,11 @@ const cardEvolutionRules = [
         out: "34",  // 手抜き
     },
     {
+        in1: "25",  // 捨てる
+        in2: "25",  // 捨てる
+        out: "34",  // 手抜き
+    },
+    {
         in1: "53",  // 長考
         in2: "55",  // 捨て石
         out: "35",  // 定石外れ
@@ -2692,6 +2697,11 @@ const cardEvolutionRules = [
     {
         in1: "40",  // 休憩
         in2: "40",  // 休憩
+        out: "41",  // 諦めない心
+    },
+    {
+        in1: "40",  // 休憩
+        in2: "50",  // 迫力
         out: "41",  // 諦めない心
     },
     {
@@ -3486,10 +3496,10 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
             self.actions = [
                 [{
                     name: "card",
-                    point: "92",    // サカレ形
+                    point: "90",    // アキ三角
                 },{
                     name: "card",
-                    point: "92",    // サカレ形
+                    point: "91",    // ダメ詰まり
                 },{
                     name: "card",
                     point: "92",    // サカレ形
@@ -3497,22 +3507,13 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
                 [{
                     name: "attack",
                     point: 1,
-                },{
-                    name: "life",
-                    point: 1,
                 }],
                 [{
                     name: "attack",
                     point: 2,
-                },{
-                    name: "life",
-                    point: 2,
                 }],
                 [{
                     name: "attack",
-                    point: 3,
-                },{
-                    name: "life",
                     point: 3,
                 }],
                 [{
@@ -3520,20 +3521,25 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
                     point: 4,
                 }],
                 [{
-                    name: "attack",
-                    point: 5,
+                    name: "defense",
+                    point: 3,
+                },{
+                    name: "life",
+                    point: 3,
                 }],
                 [{
-                    name: "attack",
-                    point: 6,
+                    name: "defense",
+                    point: 3,
+                },{
+                    name: "life",
+                    point: 3,
                 }],
                 [{
-                    name: "attack",
-                    point: 7,
-                }],
-                [{
-                    name: "attack",
-                    point: 8,
+                    name: "defense",
+                    point: 3,
+                },{
+                    name: "life",
+                    point: 3,
                 }],
             ];
             break;
@@ -3909,7 +3915,7 @@ const map = [
 
     { floor: "２階", type: 0, enemy: "03", items: {card: "32"} },// 鉄柱
     { floor: "２階", type: 1, enemy: "04", items: {stone:1} },
-    { floor: "２階", type: 1, enemy: "03", items: {stone:1, card: "02"} },// サバキ
+    { floor: "２階", type: 1, enemy: "03", items: {stone:1, card: "03"} },// ハイ
     { floor: "２階", type: 1, enemy: "04", items: {stone:1, card: "10"} },// スベリ
     { floor: "２階", type: 1, enemy: null, items: null },
     { floor: "２階", type: 3, enemy: null, items: {card1: "50", card2: "40"} },// 迫力 or 休憩
@@ -3920,7 +3926,7 @@ const map = [
     { floor: "３階", type: 0, enemy: null, items: null },
     { floor: "３階", type: 1, enemy: "05", items: {stone:1} },
     { floor: "３階", type: 1, enemy: "06", items: {stone:1, card: "04"} },// ブツカリ
-    { floor: "３階", type: 1, enemy: "05", items: {stone:1, card: "07"} },  // コスミ
+    { floor: "３階", type: 1, enemy: "05", items: {stone:1, card: "17"} },  // ホウリコミ
     { floor: "３階", type: 1, enemy: "06", items: null },//エグリ
     { floor: "３階", type: 1, enemy: "05", items: {card: "55"} },// 捨て石
     { floor: "３階", type: 2, enemy: null, items: null },
