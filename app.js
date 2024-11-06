@@ -558,10 +558,10 @@ function BasicButton(param/* {text:string, width: int, height: int, primary: boo
         }).addChildTo(this).setPosition(this.gridX.center(4), this.gridY.span(1));
         Label({text: "Enemy", fontSize: 20, fontWeight:800, fill: "white"}).addChildTo(self.enemyStatusBox).setPosition(-90, -10);
         const enemyDefenseImg = Sprite("defense").addChildTo(self.enemyStatusBox).setPosition(0, 0);
-        const enemyDefenseLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(enemyDefenseImg);
+        const enemyDefenseLabel = Label({text:"", fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(enemyDefenseImg);
         enemyDefenseLabel.text = "0";
         const enemyLifeImg = Sprite("life").addChildTo(self.enemyStatusBox).setPosition(70, 0);
-        const enemyLifeLabel = Label({fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(enemyLifeImg);
+        const enemyLifeLabel = Label({text:"", fontSize:40, fontWeight:800, fill:"white", stroke:"black", strokeWidth:2}).addChildTo(enemyLifeImg);
         enemyLifeLabel.text = "10";
 
         // 敵ステータス再描画
@@ -3791,15 +3791,15 @@ phina.define('MainScene', {
 
             if (nowMap.type === 0 || nowMap.type === 9) {
                 if (nowMap.floor === "１階") {
-                    text = "…なにかいる";
+                    text = "…誰かが来る、席亭か？";
                 } else if (nowMap.floor === "２階") {
                     text = "…席亭はどこだろうか";
                 } else if (nowMap.floor === "３階") {
-                    text = "…何階まであるのだろうか";
+                    text = "…碁を打ちたいのだが";
                 } else if (nowMap.floor === "４階") {
-                    text = "…本当に碁会所だろうか";
+                    text = "…本当に碁会所なのだろうか";
                 } else if (nowMap.floor === "５階") {
-                    text = "…まだ続くのだろうか";
+                    text = "…碁盤が見当たらないな";
                 } else if (nowMap.floor === "６階") {
                     text = "…廊下しかないのだろうか";
                 } else if (nowMap.floor === "７階") {
@@ -4555,7 +4555,7 @@ function Storage() {
 
         Label({
             text: "ver. " + version,
-            fontSize: 15,
+            fontSize: 18,
             fill: "white",
         }).addChildTo(this).setPosition(this.gridX.center(3.8), this.gridY.center(-1.5));
 
