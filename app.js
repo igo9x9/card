@@ -3507,17 +3507,29 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
                 [{
                     name: "attack",
                     point: 1,
+                },{
+                    name: "defense",
+                    point: 1,
                 }],
                 [{
                     name: "attack",
+                    point: 2,
+                },{
+                    name: "defense",
                     point: 2,
                 }],
                 [{
                     name: "attack",
                     point: 3,
+                },{
+                    name: "defense",
+                    point: 3,
                 }],
                 [{
                     name: "attack",
+                    point: 4,
+                },{
+                    name: "defense",
                     point: 4,
                 }],
                 [{
