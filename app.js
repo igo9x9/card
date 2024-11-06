@@ -3694,7 +3694,7 @@ phina.define('MainScene', {
 
         // 背景を描画
         let backImg;
-        if (nowMap.type === 0 || nowMap.type === 1) {
+        if (nowMap.type === 1) {
             backImg = "dungeon01";
         } else if (nowMap.type === 2) {
             backImg = "dungeon02";
@@ -3806,32 +3806,13 @@ phina.define('MainScene', {
         }
 
         // 通路
-        if (nowMap.type === 0 || nowMap.type === 1 || nowMap.type === 9) {
+        if (nowMap.type === 1 || nowMap.type === 9) {
 
-            if (nowMap.type === 0 || nowMap.type === 9) {
-                if (nowMap.floor === "１階") {
-                    text = "…おっ、誰か来るみたいだ";
-                } else if (nowMap.floor === "２階") {
-                    text = "…席亭はどこだろうか";
-                } else if (nowMap.floor === "３階") {
-                    text = "…碁を打ちたいのだが";
-                } else if (nowMap.floor === "４階") {
-                    text = "…本当に碁会所なのだろうか";
-                } else if (nowMap.floor === "５階") {
-                    text = "…碁盤が見当たらないな";
-                } else if (nowMap.floor === "６階") {
-                    text = "…廊下しかないのだろうか";
-                } else if (nowMap.floor === "７階") {
-                    text = "…トイレはどこだろうか";
-                } else if (nowMap.floor === "８階") {
-                    text = "…自販機はないのだろうか";
-                } else if (nowMap.floor === "９階") {
-                    text = "…行き止まりだ";
-                }
+            if (nowMap.text) {
                 const label = Label({
                     fill: "white",
                     fontSize: 30,
-                    text: text,
+                    text: nowMap.text,
                 }).addChildTo(this).setPosition(this.gridX.center(), this.gridY.center(-1));
                 label.alpha = 0;
                 label.tweener.wait(300).to({alpha:1}, 300)
@@ -3917,16 +3898,16 @@ phina.define('MainScene', {
 
 // type 0:通路入り口 1:通路 2:階段 3:カード２択
 const map = [
-    { floor: "１階", type: 0, enemy: "01", items: null },
-    { floor: "１階", type: 1, enemy: "02", items: {card: "11"} },// キリ
+    { floor: "１階", type: 1, enemy: "01", text:"…おっ、誰か来るみたいだ", items: null },
+    { floor: "１階", type: 1, enemy: "02", text:"…碁を打ちに来たのだが", items: {card: "11"} },// キリ
     { floor: "１階", type: 1, enemy: "01", items: {card: "07"} },// コスミ
     { floor: "１階", type: 1, enemy: "02", items: {stone:1, card: "15"} },// ハネ
     { floor: "１階", type: 1, enemy: null, items: null },
     { floor: "１階", type: 3, enemy: null, items: {card1: "07", card2: "40"} }, // コスミ or 休憩
     { floor: "１階", type: 1, enemy: "01", items: {stone:1} },
-    { floor: "１階", type: 2, enemy: null, items: null },
+    { floor: "１階", type: 2, enemy: null, text:"…２階が店舗なのか？", items: null },
 
-    { floor: "２階", type: 0, enemy: "03", items: {card: "32"} },// 鉄柱
+    { floor: "２階", type: 1, enemy: "03", text:"…２階じゃないのか", items: {card: "32"} },// 鉄柱
     { floor: "２階", type: 1, enemy: "04", items: {stone:1} },
     { floor: "２階", type: 1, enemy: "03", items: {stone:1, card: "03"} },// ハイ
     { floor: "２階", type: 1, enemy: "04", items: {stone:1, card: "10"} },// スベリ
@@ -3936,7 +3917,7 @@ const map = [
     { floor: "２階", type: 1, enemy: "04", items: {stone:1} },
     { floor: "２階", type: 2, enemy: null, items: null },
 
-    { floor: "３階", type: 0, enemy: null, items: null },
+    { floor: "３階", type: 1, enemy: null, text:"…だれかいないのか", items: null },
     { floor: "３階", type: 1, enemy: "05", items: {stone:1} },
     { floor: "３階", type: 1, enemy: "06", items: {stone:1, card: "04"} },// ブツカリ
     { floor: "３階", type: 1, enemy: "05", items: {stone:1, card: "17"} },  // ホウリコミ
@@ -3944,8 +3925,8 @@ const map = [
     { floor: "３階", type: 1, enemy: "05", items: {card: "55"} },// 捨て石
     { floor: "３階", type: 2, enemy: null, items: null },
 
-    { floor: "４階", type: 0, enemy: null, items: null },
-    { floor: "４階", type: 1, enemy: "07", items: {stone:1, card: "05"} },//ハネ返す
+    { floor: "４階", type: 1, enemy: null, text:"…喉が渇いてきた", items: null },
+    { floor: "４階", type: 1, enemy: "07", text:"…自販機ないかな", items: {stone:1, card: "05"} },//ハネ返す
     { floor: "４階", type: 1, enemy: null, items: null },
     { floor: "４階", type: 3, enemy: null, items: {card1: "55", card2: "40"} },// 捨て石 or 休憩
     { floor: "４階", type: 1, enemy: "08", items: {stone:1} },
@@ -3955,7 +3936,7 @@ const map = [
     { floor: "４階", type: 3, enemy: null, items: {card1: "53", card2: "54"} }, // 長考 or 形勢判断
     { floor: "４階", type: 2, enemy: null, items: null },
 
-    { floor: "５階", type: 0, enemy: "09", items: null },
+    { floor: "５階", type: 1, enemy: "09", text:"…席亭はどこだ", items: null },
     { floor: "５階", type: 1, enemy: "10", items: {card: "06"} }, // シノギ
     { floor: "５階", type: 1, enemy: "09", items: {stone:1} },
     { floor: "５階", type: 1, enemy: null, items: null },
@@ -3964,7 +3945,7 @@ const map = [
     { floor: "５階", type: 1, enemy: "10", items: {stone:1} },
     { floor: "５階", type: 2, enemy: null, items: null },
 
-    { floor: "６階", type: 0, enemy: "11", items: null },
+    { floor: "６階", type: 1, enemy: "11", text:"…トイレもないし", items: null },
     { floor: "６階", type: 1, enemy: "12", items: {card: "20"} }, // フリカワリ
     { floor: "６階", type: 1, enemy: "11", items: {stone:1} },
     { floor: "６階", type: 1, enemy: null, items: null },
@@ -3973,7 +3954,7 @@ const map = [
     { floor: "６階", type: 1, enemy: "12", items: null },
     { floor: "６階", type: 2, enemy: null, items: null },
 
-    { floor: "７階", type: 0, enemy: "13", items: null },
+    { floor: "７階", type: 1, enemy: "13", text:"…まだ続くのか", items: null },
     { floor: "７階", type: 1, enemy: "14", items: {card: "27"} }, // 薄みをとがめる
     { floor: "７階", type: 1, enemy: "13", items: {stone:1} },
     { floor: "７階", type: 1, enemy: null, items: null },
@@ -3982,7 +3963,7 @@ const map = [
     { floor: "７階", type: 1, enemy: "14", items: null },
     { floor: "７階", type: 2, enemy: null, items: null },
 
-    { floor: "８階", type: 0, enemy: "15", items: null },
+    { floor: "８階", type: 1, enemy: "15", text:"…帰りたくなってきた", items: null },
     { floor: "８階", type: 3, enemy: null, items: {card1: "53", card2: "54"} }, // 長考 or 形勢判断,
     { floor: "８階", type: 1, enemy: "16", items: {stone:1, card: "35"} }, // 定石外れ
     { floor: "８階", type: 1, enemy: "17", items: null },
@@ -3990,7 +3971,7 @@ const map = [
     { floor: "８階", type: 1, enemy: "17", items: {stone:1} },
     { floor: "８階", type: 2, enemy: null, items: null },
 
-    { floor: "９階", type: 9, enemy: "99", items: null },
+    { floor: "９階", type: 9, enemy: "99", text: "…行き止まりだ", items: null },
     { floor: "９階", type: 10, enemy: null, items: null },
 ];
 function Player(param) {
