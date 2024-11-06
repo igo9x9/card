@@ -3909,11 +3909,10 @@ const map = [
     { floor: "２階", type: 2, enemy: null, items: null },
 
     { floor: "３階", type: 0, enemy: null, items: null },
-    { floor: "３階", type: 3, enemy: null, items: {stone:1} },
-    { floor: "３階", type: 1, enemy: "05", items: null },
+    { floor: "３階", type: 1, enemy: "05", items: {stone:1} },
     { floor: "３階", type: 1, enemy: "06", items: {stone:1, card: "04"} },// ブツカリ
     { floor: "３階", type: 1, enemy: "05", items: {stone:1, card: "07"} },  // コスミ
-    { floor: "３階", type: 1, enemy: "06", items: {card: "14"} },//エグリ
+    { floor: "３階", type: 1, enemy: "06", items: null },//エグリ
     { floor: "３階", type: 1, enemy: "05", items: {card: "55"} },// 捨て石
     { floor: "３階", type: 2, enemy: null, items: null },
 
