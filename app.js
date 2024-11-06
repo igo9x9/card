@@ -3105,6 +3105,7 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
     };
 
     self.shuffle = function() {
+        list.sort(() => Math.random() - 0.5);
         for (let i = list.length - 1; i > 0; i--) {
             let j = Math.floor(Math.random() * (i + 1));
             [list[i], list[j]] = [list[j], list[i]];
@@ -3809,7 +3810,7 @@ phina.define('MainScene', {
 
             if (nowMap.type === 0 || nowMap.type === 9) {
                 if (nowMap.floor === "１階") {
-                    text = "…誰かが来る、席亭か？";
+                    text = "…おっ、誰か来るみたいだ";
                 } else if (nowMap.floor === "２階") {
                     text = "…席亭はどこだろうか";
                 } else if (nowMap.floor === "３階") {
