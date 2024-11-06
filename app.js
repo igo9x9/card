@@ -1,6 +1,6 @@
 phina.globalize();
 
-const version = "0.5";
+const version = "1.0";
 
 // 山札（stock）
 // 手札（hand）
@@ -3372,13 +3372,13 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
             self.actions = [
                 [{
                     name: "defense",
-                    point: 1,
-                }],[{
-                    name: "defense",
                     point: 2,
                 }],[{
                     name: "defense",
                     point: 3,
+                }],[{
+                    name: "defense",
+                    point: 4,
                 }],[{
                     name: "attack",
                     point: 5,
@@ -3407,7 +3407,7 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
             ];
             break;
         case "15":
-            self.hp = 6;
+            self.hp = 8;
             self.defense = 0;
             self.defaultDefense = 0;
             self.img = "monster15";
@@ -3431,7 +3431,7 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
             ];
             break;
         case "16":
-            self.hp = 7;
+            self.hp = 9;
             self.defense = 1;
             self.defaultDefense = 0;
             self.img = "monster16";
@@ -3452,7 +3452,7 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
             ];
             break;
         case "17":
-            self.hp = 6;
+            self.hp = 8;
             self.defense = 0;
             self.defaultDefense = 0;
             self.img = "monster17";
@@ -3479,7 +3479,7 @@ function CardsUI(cards /* Cards */, isDiscard /* bool */) {
             ];
             break;
         case "99":
-            self.hp = 10;
+            self.hp = 20;
             self.defense = 10;
             self.defaultDefense = 0;
             self.img = "monster99";
@@ -3942,7 +3942,7 @@ const map = [
     { floor: "６階", type: 1, enemy: null, items: null },
     { floor: "６階", type: 3, enemy: null, items: {card1: "32", card2: "33"} }, // 鉄柱 or 村正の妖刀
     { floor: "６階", type: 1, enemy: "11", items: null },
-    { floor: "６階", type: 1, enemy: "12", items: {stone:1} },
+    { floor: "６階", type: 1, enemy: "12", items: null },
     { floor: "６階", type: 2, enemy: null, items: null },
 
     { floor: "７階", type: 0, enemy: "13", items: null },
@@ -3950,14 +3950,14 @@ const map = [
     { floor: "７階", type: 1, enemy: "13", items: {stone:1} },
     { floor: "７階", type: 1, enemy: null, items: null },
     { floor: "７階", type: 3, enemy: null, items: {card1: "26", card2: "31"} }, // 根拠を奪う or 秀策のコスミ
-    { floor: "７階", type: 1, enemy: "13", items: null },
-    { floor: "７階", type: 1, enemy: "14", items: {stone:1} },
+    { floor: "７階", type: 1, enemy: "13", items: {stone:1} },
+    { floor: "７階", type: 1, enemy: "14", items: null },
     { floor: "７階", type: 2, enemy: null, items: null },
 
     { floor: "８階", type: 0, enemy: "15", items: null },
+    { floor: "８階", type: 3, enemy: null, items: {card1: "53", card2: "54"} }, // 長考 or 形勢判断,
     { floor: "８階", type: 1, enemy: "16", items: {stone:1, card: "35"} }, // 定石外れ
-    { floor: "８階", type: 1, enemy: "17", items: {stone:1} },
-    { floor: "８階", type: 1, enemy: "15", items: {stone:1, card1: "53", card2: "54"} }, // 長考 or 形勢判断,
+    { floor: "８階", type: 1, enemy: "17", items: null },
     { floor: "８階", type: 1, enemy: "16", items: null },
     { floor: "８階", type: 1, enemy: "17", items: {stone:1} },
     { floor: "８階", type: 2, enemy: null, items: null },
